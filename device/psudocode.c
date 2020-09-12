@@ -1,12 +1,12 @@
-#include "LowPower.h"
-
+//Created by Justin Whittam Geskes and Raagave Thangeswaran for 4TR3 
+#include "LowPower.h" 
 struct Packet{
   uint16_t id;
   byte type;
   byte state;
   //etc
 }
-#define Value int
+#define Value int 
 
 void setup(){
   char* info = getInfo();
