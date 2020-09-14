@@ -10,7 +10,13 @@
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "variables": []
+
+      "variables": [
+        {
+          "name": "CMAKE_TOOLCHAIN_FILE",
+          "value": "C:\\Users\\jawg4\\Documents\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+        }
+      ]
     }
   ]
 }

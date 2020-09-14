@@ -1,8 +1,17 @@
-﻿// GatewayRPI.h : Include file for standard system include files,
-// or project specific include files.
+﻿#pragma once
 
-#pragma once
+// standard library headers
+#include <stdint.h> //uint32_t etc 
 
-#include <iostream>
 
-// TODO: Reference additional headers your program requires here.
+
+// external library headers
+
+//prefered console library. 
+#include <fmt/format.h>
+#include <fmt/core.h>
+//storage of user info from signup page.
+#include <sqlite3.h>
+
+
+
