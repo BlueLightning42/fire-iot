@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GatewayRPI.h"
+#include "../GatewayRPI.h"
 
 #include "Gateway.h"
 #include "Storage.h"

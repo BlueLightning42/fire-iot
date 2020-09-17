@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GatewayRPI.h"
+#include "../GatewayRPI.h"
 
 namespace typ{
 enum Type: unsigned {

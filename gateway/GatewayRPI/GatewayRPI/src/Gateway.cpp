@@ -1,4 +1,4 @@
-#include "Gateway.h"
+#include "../headers/Gateway.h"
 
 
 Gateway::Gateway(): running(true), message_recived(false) {

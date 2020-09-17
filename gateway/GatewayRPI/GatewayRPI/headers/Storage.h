@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GatewayRPI.h"
+#include "../GatewayRPI.h"
 
 /*
 stores device id. 
@@ -20,13 +20,9 @@ struct Device {
 /*
 on init/restart load all devices from a small database file (sqllite3?)
 */
-std::vector<std::pair<Device, int>> loadDevices() {
-	return {};
-}
+std::vector<Device> loadDevices();
 
 /*
 on shutdown store all devices into a small database file (sqllite3?)
 */
-void storeDevices(std::vector<std::pair<Device, int>> data) {
-
-}
+void storeDevices(std::vector<Device> data);

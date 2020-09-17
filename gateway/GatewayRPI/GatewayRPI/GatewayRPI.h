@@ -34,9 +34,11 @@ void log(logging::error err, Str format, const Args& ...args) {
 	using namespace std::chrono;
 	auto now = system_clock::to_time_t(system_clock::now());
 	char timestamp[20];
-	std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
+	tm buf; // to remove "this function or variable may be unsafe" use localtime_s instead
+	localtime_s(&buf, &now);
+	std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", &buf);
 
-	//fmt::print("[{:%Y-%m-%d}]>", *std::localtime(&now)); fmt/chrono not working switching to ctime
+	//fmt::print("[{:%Y-%m-%d}]>", *std::localtime(&now)); fmt/chrono not working switching to ctime/strftime
 	fmt::print(fg(fmt::color::dim_gray), "[{}]> ", timestamp);
 
 	if ( err == logging::info ) { //only for console?
