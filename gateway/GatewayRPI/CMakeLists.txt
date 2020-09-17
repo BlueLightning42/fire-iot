@@ -3,7 +3,9 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("GatewayRPI")
+project ("GatewayRPI" 
+				VERSION 0.1 
+				DESCRIPTION "Gateway for Fire alarm IOT project")
 
 # Include sub-projects.
 add_subdirectory ("GatewayRPI")

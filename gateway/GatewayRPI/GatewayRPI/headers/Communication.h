@@ -11,7 +11,6 @@ enum Type: unsigned {
 }
 /*
 format of the full packet recived through LoRa
-
 */
 struct Message {
 	uint16_t dest; // id of the desired gateway?
