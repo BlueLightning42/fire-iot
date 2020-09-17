@@ -4,6 +4,9 @@
 
 
 int main(){
-	fmt::print("Hello Cmake");
+	//testing
+	log(logging::info, "info example {}\n", "works okay!");
+	log(logging::warn, "warn example {}\n", 24);
+	log(logging::critical, "critical example {} {} {}\n", 12, 'a', "shutting down");
 	return 0;
 }
