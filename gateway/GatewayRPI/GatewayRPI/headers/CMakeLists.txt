@@ -5,6 +5,7 @@ target_sources(GateLib
 	    Communication.h
 	    Gateway.h
 	    Storage.h
+		logging.h
 )
 
 target_include_directories(GateLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -2,10 +2,12 @@
 
 
 Gateway::Gateway(): running(true), message_recived(false) {
+	openLogger();
 	tracked_devices = loadDevices();
 }
 Gateway::~Gateway() {
 	storeDevices(tracked_devices);
+	closeLogger();
 }
 void Gateway::mainLoop() {
 	while ( running ) {

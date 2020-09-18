@@ -5,4 +5,5 @@ target_sources(GateLib
 	    Communication.cpp
 	    Gateway.cpp
 	    Storage.cpp
+		logging.cpp
 )
