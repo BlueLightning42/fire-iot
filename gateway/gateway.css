@@ -1,0 +1,38 @@
+html, body, form, fieldset{
+  width: 99%;
+  height: 99%;
+}
+fieldset{
+   border-style: none;
+}
+.item{
+  flex: 1 1 auto;
+  border: 3px outset rgba(24, 153, 142, 0.342);
+  border-radius: 6px;
+  font-size: large;
+  padding: 3px;
+  margin: 5px;
+}
+#inputCode{
+  flex-grow: 2;
+}
+#inputCountry, #inputProvice{
+  flex-grow: 4;
+}
+.container {
+  width: 99%;
+  height: 99%;
+  display: flex; /* or inline-flex */
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.container_inner {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 80%;
+  height: 30%;
+}
