@@ -24,6 +24,20 @@ target_include_directories(GateLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # Please let me use c++11
 target_compile_features(GateLib PUBLIC cxx_std_11)
 
+if(UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
+
+if(LINUX)
+	# include mqtt lib
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/mqtt/)
+
+	target_include_directories(GateLib PRIVATE 
+		${CMAKE_CURRENT_SOURCE_DIR}/lib/mqtt/MQTTClient/src 
+		${CMAKE_CURRENT_SOURCE_DIR}/lib/mqtt/MQTTClient/src/linux
+	)
+endif()
+
 # Add source to this project's executable.
 add_executable (${PROJECT_NAME} main.cpp)
 
