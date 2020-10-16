@@ -13,7 +13,7 @@ void messageArrived(MQTT::MessageData& md) {
 }
 
 // IPStack and Countdown are found in ....../linux.cpp
-void send_message(const char* msg, const char* hostname = "localhost") {
+void send_message(const char* msg, const char* hostname, const char* _clientID, const char* _username, const char* _password) {
     IPStack ipstack = IPStack();
 
     MQTT::Client<IPStack, Countdown> client = MQTT::Client<IPStack, Countdown>(ipstack);
@@ -26,7 +26,10 @@ void send_message(const char* msg, const char* hostname = "localhost") {
     log(logging::info, "MQTT connecting\n");
     MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
     data.MQTTVersion = 3;
-    data.clientID.cstring = (char*)"mbed-icraggs";
+    data.clientID.cstring = (char*)_clientID;
+    data.username.cstring = (char*)_username;
+    data.password.cstring = (char*)_password;
+
     rc = client.connect(&data);
     if ( rc != 0 )
         log(logging::warn, "rc from MQTT connect is {}\n", rc);
@@ -67,7 +70,7 @@ void send_message(const char* msg, const char* hostname = "localhost") {
 }
 
 #else
-void send_message(const char* msg, const char* host) {
-	log(logging::warn, "Did not send message '{}' to '{}' due to platform not being supported. (debugging on windows or mac)\n", msg, host );
+void send_message(const char* msg, const char* hostname, const char* _clientID, const char* _username, const char* _password) {
+	log(logging::warn, "Did not send message '{}' to '{}' due to platform not being supported. (debugging on windows or mac)\n", msg, hostname );
 }
 #endif // !__linux__

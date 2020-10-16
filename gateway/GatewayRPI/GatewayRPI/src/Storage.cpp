@@ -1,12 +1,12 @@
 #include "../headers/Storage.h"
 
 
-const char* filename = "stored_devices.db";
+static const char* database_name = "stored_devices.db";
 
 std::vector<Device> loadDevices() {
 	sqlite3* db;
 	// open database connection
-	int err = sqlite3_open(filename, &db);
+	int err = sqlite3_open(database_name, &db);
 	if ( err ) {
 		log(logging::warn, "Can't open device database: {}", sqlite3_errmsg(db));
 		sqlite3_close(db);
@@ -40,7 +40,7 @@ void storeDevices(std::vector<Device> data) {
 std::string prepareAlert(uint16_t id, typ::Type alert_type) {
 	sqlite3* db;
 	// open database connection
-	int err = sqlite3_open(filename, &db);
+	int err = sqlite3_open(database_name, &db);
 	if ( err ) {
 		log(logging::warn, "Can't open device database: {}", sqlite3_errmsg(db));
 		sqlite3_close(db);
@@ -60,8 +60,17 @@ std::string prepareAlert(uint16_t id, typ::Type alert_type) {
 	 case typ::no_communication: alert_name = "No communication recived for some time";
 	 default: log(logging::critical, "Unknown alert_type: {} passed to prepareAlert function", alert_type);
 	}
-	std::string alert = fmt::format("Warning: '{}' recived from {},{}", alert_name, 0, 0);
+
+	using namespace std::chrono;
+	auto now = system_clock::to_time_t(system_clock::now());
+
+	tm buf; // to remove "this function or variable may be unsafe" use localtime_s instead
+	localtime_s(&buf, &now);
+
+	std::string alert = fmt::format("Warning: '{}'\nRecived at: [{:%Y-%m-%d %H:%M:%S}]\nFrom {},{}", alert_name, buf, 0, 0);
 
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
+
+	return alert;
 }

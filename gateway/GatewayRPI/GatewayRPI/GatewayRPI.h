@@ -10,6 +10,7 @@
 // #include <fstream>	// ofstream was annoying me with not being able to implement a global/static object
 #include <cstdio>
 #include <string>
+#include <fstream>
 
 // external library headers
 
@@ -18,7 +19,7 @@
 #include <fmt/color.h>
 #include <fmt/chrono.h>
 
-// utility logging function 
+// utility logging function
 #include "headers/logging.h"
 
 //storage of user info from signup page.

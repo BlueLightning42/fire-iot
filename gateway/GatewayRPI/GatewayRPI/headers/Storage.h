@@ -14,10 +14,12 @@ struct Device {
 	const bool operator<(const uint16_t& _id) const {
 		return this->id < _id;
 	}
-	Device(): id(NULL), 
-		last_communication(std::chrono::steady_clock::time_point::max()) {}
+	Device(): id(NULL),
+		last_communication(std::chrono::steady_clock::time_point::max()),
+		first_detection(std::chrono::steady_clock::time_point::max()) {}
 	Device(uint16_t _id): id(_id),
-		last_communication(std::chrono::steady_clock::time_point::max()) {}
+		last_communication(std::chrono::steady_clock::time_point::max()),
+		first_detection(std::chrono::steady_clock::time_point::max()) {}
 };
 
 /*
@@ -34,3 +36,4 @@ void storeDevices(std::vector<Device> data);
 retrives device data and stores it in a string. (small overhead)
 */
 std::string prepareAlert(uint16_t, typ::Type);
+
