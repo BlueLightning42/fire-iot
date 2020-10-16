@@ -24,8 +24,6 @@ inline void Gateway::pollMessages() {
 }
 
 
-
-
 void Gateway::updateTrackedDevices() {
 	for ( const auto& message : messages ) {
 		switch ( message.type ) {
@@ -38,11 +36,13 @@ void Gateway::updateTrackedDevices() {
 			break;
 		 }
 		 case typ::alarm:{
-			 log(logging::warn, "fire alarm with id:{} is going off", message.id);
+			 auto fire_alert = prepareAlert(message.id, message.type);
+			 send_message(fire_alert.c_str(), host_name.c_str());
 			 break;
 		 }
 		 case typ::error:{
-			log(logging::warn, "error code recived from id:{}", message.id);
+			auto fire_alert = prepareAlert(message.id, message.type);
+			send_message(fire_alert.c_str(), host_name.c_str());
 			break;
 		 }
 		 default:{
@@ -55,6 +55,9 @@ void Gateway::updateTrackedDevices() {
 void Gateway::checkForTimeouts() {
 	for ( const auto device : tracked_devices ) {
 		auto time_passed = std::chrono::steady_clock::now() - device.last_communication;
-		//if (time_passed > )
+		if ( time_passed > this->timeout_no_communication ) {
+			auto fire_alert = prepareAlert(device.id, typ::no_communication);
+			send_message(fire_alert.c_str(), host_name.c_str());
+		}
 	}
 }

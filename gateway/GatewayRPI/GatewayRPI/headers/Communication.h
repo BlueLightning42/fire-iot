@@ -6,7 +6,8 @@ namespace typ{
 enum Type: unsigned {
 	heartbeat,	// 00
 	alarm,		// 01
-	error		// 10 ? (see if more error types are needed)
+	error,		// 10 ? (see if more error types are needed)
+	no_communication // gateway error...should not be sent from edge device idk
 };
 }
 /*
@@ -18,3 +19,5 @@ struct Message {
 	typ::Type type : 2; //bits indicating the state of the communicating alarm.
 	unsigned padding : 6; // TODO pad the rest of the byte with info?
 };
+
+void send_message(const char*, const char*);

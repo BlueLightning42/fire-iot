@@ -6,7 +6,7 @@
 #include <stdint.h> //uint32_t etc 
 #include <vector>
 #include <chrono>	// system_clock steady_clock
-#include <ctime>	// localtime_s
+#include <ctime>	// localtime_s (just used for logging...and theres a chance I can remove it with fmt chrono
 // #include <fstream>	// ofstream was annoying me with not being able to implement a global/static object
 #include <cstdio>
 #include <string>
@@ -23,6 +23,9 @@
 
 //storage of user info from signup page.
 #include <sqlite3.h>
+
+
+// communication stuff...probably some of the more complicated parts of this
 
 #ifdef __linux__
 // TODO: decide if its simpler to use QOS1 and figure it out on the fire department end.

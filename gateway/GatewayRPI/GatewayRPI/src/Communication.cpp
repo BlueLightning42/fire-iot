@@ -67,7 +67,7 @@ void send_message(const char* msg, const char* hostname = "localhost") {
 }
 
 #else
-void send_message(const char* msg) {
-	log(logging::warn, "Did not send message '{}' due to platform not being supported. (debugging on windows or mac)\n", msg );
+void send_message(const char* msg, const char* host) {
+	log(logging::warn, "Did not send message '{}' to '{}' due to platform not being supported. (debugging on windows or mac)\n", msg, host );
 }
 #endif // !__linux__
