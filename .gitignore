@@ -34,3 +34,6 @@ out/
 # Other
 __pycache__/
 *.pyc
+
+# custom build directory
+build/

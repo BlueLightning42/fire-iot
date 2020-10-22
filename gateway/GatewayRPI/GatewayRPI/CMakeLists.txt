@@ -2,10 +2,9 @@
 
 cmake_minimum_required (VERSION 3.13)
 
-
-# Include External librarys
-find_package(fmt CONFIG REQUIRED)
-find_package(unofficial-sqlite3 CONFIG REQUIRED)
+if(UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
 
 # Add all source files to the GateLib library
 add_library(GateLib STATIC GatewayRPI.h)
@@ -15,30 +14,40 @@ add_library(GateLib STATIC GatewayRPI.h)
 add_subdirectory(headers)
 add_subdirectory(src)
 
-target_link_libraries(GateLib PRIVATE unofficial::sqlite3::sqlite3)
-target_link_libraries(GateLib PUBLIC fmt::fmt fmt::fmt-header-only)
-
 
 target_include_directories(GateLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/fmt/include)
 
-# Please let me use c++11
-target_compile_features(GateLib PUBLIC cxx_std_11)
 
-if(UNIX AND NOT APPLE)
-    set(LINUX TRUE)
-endif()
+cmake_policy(SET CMP0048 OLD)
+# same config as https://github.com/SRombauts/SQLiteCpp_Example/blob/master/CMakeLists.txt
+set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "" FORCE)
+set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "" FORCE)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/SQLite)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/mqtt/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/fmt)
+
+# Link gatelib with with SQLiteCpp
+target_link_libraries(GateLib SQLiteCpp)
+target_link_libraries(GateLib SQLiteCpp)
+target_link_libraries(GateLib SQLiteCpp)
+
 
 if(LINUX)
-	# include mqtt lib
-	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/mqtt/)
-
 	target_include_directories(GateLib PRIVATE 
 		${CMAKE_CURRENT_SOURCE_DIR}/lib/mqtt/MQTTClient/src 
 		${CMAKE_CURRENT_SOURCE_DIR}/lib/mqtt/MQTTClient/src/linux
 	)
 endif()
 
+
+# Please let me use c++11
+target_compile_features(GateLib PUBLIC cxx_std_11)
+
+
 # Add source to this project's executable.
 add_executable (${PROJECT_NAME} main.cpp)
 
+# add the gateway library to main
 target_link_libraries(${PROJECT_NAME} PRIVATE GateLib)
