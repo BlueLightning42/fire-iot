@@ -15,15 +15,17 @@
 // external library headers
 
 //prefered console library. Used to speed up dev of logging/debugging...
-#include <fmt/format.h>
-#include <fmt/color.h>
-#include <fmt/chrono.h>
+#define FMT_HEADER_ONLY 1
+#include "fmt/format.h"
+#include "fmt/color.h"
+#include "fmt/chrono.h"
+
+//storage of user info from signup page. Using a wrapper for sqlite3
+#include <SQLiteCpp/SQLiteCpp.h>
 
 // utility logging function
 #include "headers/logging.h"
 
-//storage of user info from signup page.
-#include <sqlite3.h>
 
 
 // communication stuff...probably some of the more complicated parts of this

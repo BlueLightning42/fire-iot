@@ -1,7 +1,7 @@
 CREATE TABLE StoredDevices (
 	id int PRIMARY KEY,
 	address  VARCHAR(25) NOT NULL,
-    name VARCHAR(20),
+    postal_code VARCHAR(20),
     device_type VARCHAR(20)
 );
 

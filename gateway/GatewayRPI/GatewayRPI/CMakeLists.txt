@@ -19,14 +19,19 @@ target_include_directories(GateLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/fmt/include)
 
 
+# fmt header only library
+add_library(fmt INTERFACE)
+target_compile_definitions(fmt INTERFACE FMT_HEADER_ONLY=1)
+target_include_directories(fmt INTERFACE
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/fmt/include)
+
 cmake_policy(SET CMP0048 OLD)
 # same config as https://github.com/SRombauts/SQLiteCpp_Example/blob/master/CMakeLists.txt
 set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "" FORCE)
 set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/SQLite)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/mqtt/)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/fmt)
+
 
 # Link gatelib with with SQLiteCpp
 target_link_libraries(GateLib SQLiteCpp)
@@ -34,7 +39,9 @@ target_link_libraries(GateLib SQLiteCpp)
 target_link_libraries(GateLib SQLiteCpp)
 
 
-if(LINUX)
+if(LINUX) # throws errors from all the linux specific code when I test in Visual studio...runs as normal on the pi
+
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/mqtt/)
 	target_include_directories(GateLib PRIVATE 
 		${CMAKE_CURRENT_SOURCE_DIR}/lib/mqtt/MQTTClient/src 
 		${CMAKE_CURRENT_SOURCE_DIR}/lib/mqtt/MQTTClient/src/linux
@@ -43,7 +50,7 @@ endif()
 
 
 # Please let me use c++11
-target_compile_features(GateLib PUBLIC cxx_std_11)
+target_compile_features(GateLib PUBLIC cxx_std_17)
 
 
 # Add source to this project's executable.

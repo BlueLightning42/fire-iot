@@ -29,8 +29,8 @@ std::vector<Device> loadDevices();
 
 /*
 on shutdown store all devices into a small database file (sqllite3?)
+void storeDevices(std::vector<Device> data); not implemented because functionality changed.
 */
-void storeDevices(std::vector<Device> data);
 
 /*
 retrives device data and stores it in a string. (small overhead)

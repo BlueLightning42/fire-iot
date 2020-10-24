@@ -58,9 +58,10 @@ Gateway::Gateway(): running(true) {
 	openLogger(); // HAS to be opened before any logging can be done otherwise will crash on file write
 	readConfig(); // Store some configurable values. (can be changed by users)
 	tracked_devices = loadDevices(); // gets a sorted vector of all the id's of stored devices.
+	mainLoop();
 }
 Gateway::~Gateway() {
-	storeDevices(tracked_devices); // store last state of devices.
+	// storeDevices(tracked_devices); // store last state of devices.
 	closeLogger(); // Good manners to close logging resources 
 }
 
