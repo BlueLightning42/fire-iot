@@ -7,3 +7,6 @@
 [submodule "gateway/GatewayRPI/GatewayRPI/lib/SQLite"]
 	path = gateway/GatewayRPI/GatewayRPI/lib/SQLite
 	url = https://github.com/SRombauts/SQLiteCpp.git
+[submodule "gateway\\GatewayRPI\\GatewayRPI\\lib\\RadioHead"]
+	path = gateway\\GatewayRPI\\GatewayRPI\\lib\\RadioHead
+	url = https://github.com/adafruit/RadioHead.git

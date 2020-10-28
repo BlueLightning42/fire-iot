@@ -42,5 +42,13 @@
 #include "./lib/mqtt/MQTTClient/src/MQTTClient.h"
 
 #include "./lib/mqtt/MQTTClient/src/linux/linux.cpp"
+
+// initial attempt https://www.airspayce.com/mikem/arduino/RadioHead/ if this doesn't run on the pi going use this fork https://github.com/hallard/RadioHead (much older commit so trying new official first)
+// I need a driver and a manager
+// RH_RF95 Works with Semtech SX1276/77/78/79, Modtronix inAir4 and inAir9, and HopeRF RFM95/96/97/98 and other similar LoRa capable radios. Supports Long Range (LoRa) with spread spectrum frequency hopping, large payloads etc. FSK/GFSK/OOK modes are not (yet) supported.
+// https://www.airspayce.com/mikem/bcm2835/ needs to be downloaded and init...cant figure out if I can make a submodule yet
+#include "./lib/RadioHead/RH_RF95.h" // I think I'm going have to use either this without the manager or
+#include "./lib/RadioHead/RHDatagram.h"
+
 #endif
 
