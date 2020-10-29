@@ -7,6 +7,7 @@ hostname = localhost
 ClientName = OG_Gateway
 username = fire
 password = iot
+topic = alert
 
 # Timeout values are in milliseconds
 timeout_no_communication = 180000
@@ -32,23 +33,24 @@ void Gateway::readConfig() {
 			else if ( name == "ClientName" ) client_name = value;
 			else if ( name == "username" ) username = value;
 			else if ( name == "password" ) password = value;
+			else if ( name == "topic" ) topic = value;
 			else if ( name == "timeout_no_communication" ) timeout_no_communication = std::chrono::milliseconds(std::stoi(value));
 			else if ( name == "timeout_alarm_blaring" ) timeout_alarm_blaring = std::chrono::milliseconds(std::stoi(value));
 		}
 	} else {
 		log(logging::warn, "Couldn't open config file.");
 		
-		std::FILE* out_config;
-		fopen_s(&out_config, "myConfig.txt", "w");
-		if ( !out_config ) {
-			log(logging::critical, "couldn't write a new config file...problem with permissions?");
-		} else {
-			log(logging::info, "Replacing config with defaults");
-			fmt::print(out_config, default_config_text);
-		}
-		std::fclose(out_config);
+		auto out = fmt::output_file("myConfig.txt");
 
+		out.print(default_config_text);
+		log(logging::info, "Replacing config with defaults");
+
+		//default values
 		host_name = "localhost";
+		client_name = "OG_Gateway";
+		username = "fire";
+		password = "iot";
+		topic = "alert";
 		timeout_no_communication = std::chrono::minutes{ 3 };
 		timeout_no_communication = std::chrono::seconds{ 30 };
 	}
@@ -68,7 +70,7 @@ Gateway::~Gateway() {
 inline void Gateway::sendAlert(const std::string& msg) {
 	/* Replace send_message with a custom function or library populated with relevant info if changed from MQTT
 	*/
-	send_message(msg.c_str(), host_name.c_str(), client_name.c_str(), username.c_str(), password.c_str());
+	send_message(msg.c_str(), host_name.c_str(), client_name.c_str(), username.c_str(), password.c_str(), topic.c_str());
 }
 
 
@@ -89,12 +91,6 @@ void Gateway::mainLoop() {
 		}
 		checkForTimeouts();
 	}
-}
-
-inline void Gateway::pollMessages() {
-	/* Add all LoRa messages recived to the messages vector
-	 * TODO: ALL OF THIS
-	 */
 }
 
 

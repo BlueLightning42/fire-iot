@@ -45,11 +45,9 @@ std::string prepareAlert(uint16_t id, typ::Type alert_type) {
 	 case typ::no_communication: alert_name = "No communication recived for some time"; break;
 	 default: log(logging::critical, "Unknown alert_type: {} passed to prepareAlert function", alert_type);
 	}
+
 	using namespace std::chrono;
 	auto now = system_clock::to_time_t(system_clock::now());
-
-	tm buf; // to remove "this function or variable may be unsafe" use localtime_s instead
-	localtime_s(&buf, &now);
 
 	try {
 		SQLite::Database db(database_name, SQLite::OPEN_READONLY | SQLite::OPEN_FULLMUTEX, 200);
@@ -59,7 +57,7 @@ std::string prepareAlert(uint16_t id, typ::Type alert_type) {
 		query.bind(1, id);
 		while (query.executeStep()) {
 			alert = fmt::format("Warning: '{}'\nRecived at: [{:%Y-%m-%d %H:%M:%S}]\nFrom {}, {}\n",
-								alert_name, buf, query.getColumn(0), query.getColumn(1));
+								alert_name, fmt::localtime(now), query.getColumn(0), query.getColumn(1));
 		}
 		log(logging::info, "Read database and setup a alert");
 		return alert;

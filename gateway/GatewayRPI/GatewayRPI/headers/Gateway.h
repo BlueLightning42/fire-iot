@@ -21,6 +21,7 @@ class Gateway {
 	std::string client_name; // for alert connection
 	std::string username; // for alert connection
 	std::string password; // for alert connection
+	std::string topic; // for alert connection
 	std::chrono::milliseconds timeout_no_communication;
 	std::chrono::milliseconds timeout_alarm_blaring;
 

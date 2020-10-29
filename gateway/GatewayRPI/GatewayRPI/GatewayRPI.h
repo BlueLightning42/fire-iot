@@ -6,7 +6,7 @@
 #include <stdint.h> //uint32_t etc 
 #include <vector>
 #include <chrono>	// system_clock steady_clock
-#include <ctime>	// localtime_s (just used for logging...and theres a chance I can remove it with fmt chrono
+
 // #include <fstream>	// ofstream was annoying me with not being able to implement a global/static object
 #include <cstdio>
 #include <string>
@@ -15,8 +15,9 @@
 // external library headers
 
 //prefered console library. Used to speed up dev of logging/debugging...
-#define FMT_HEADER_ONLY 1
+#include "fmt/core.h"
 #include "fmt/format.h"
+#include "fmt/os.h"
 #include "fmt/color.h"
 #include "fmt/chrono.h"
 
@@ -37,11 +38,15 @@
 // QOS1 = at least once.
 // QOS2 = exactly once.
 
+#define DISABLE_MQTT 1
+
+#ifndef DISABLE_MQTT
 #define MQTTCLIENT_QOS2 1
 //communication with fire department over mqtt
 #include "./lib/mqtt/MQTTClient/src/MQTTClient.h"
 
 #include "./lib/mqtt/MQTTClient/src/linux/linux.cpp"
+#endif
 
 // initial attempt https://www.airspayce.com/mikem/arduino/RadioHead/ if this doesn't run on the pi going use this fork https://github.com/hallard/RadioHead (much older commit so trying new official first)
 // I need a driver and a manager
