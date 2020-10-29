@@ -20,4 +20,7 @@ struct Message {
 	unsigned padding : 4; // TODO pad the rest of the byte with info?
 };
 
+void initLoRa();
+void closeLoRa();
+
 void send_message(const char* msg, const char* hostname, const char* _clientID, const char* _username, const char* _password, const char* topic);

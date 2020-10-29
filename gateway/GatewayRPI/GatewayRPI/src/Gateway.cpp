@@ -56,14 +56,32 @@ void Gateway::readConfig() {
 	}
 }
 
-Gateway::Gateway(): running(true) {
+#ifdef __linux__
+#include <signal.h>
+
+//Flag for Ctrl-C
+volatile sig_atomic_t running = true;
+
+void sig_handler(int sig){
+	log(logging::warn, "Break received, exiting!");
+  	running = false;	
+}
+
+#endif
+
+Gateway::Gateway() {
+#ifdef __linux__
+	signal(SIGINT, sig_handler); // Ctrl-C
+#endif
 	openLogger(); // HAS to be opened before any logging can be done otherwise will crash on file write
 	readConfig(); // Store some configurable values. (can be changed by users)
 	tracked_devices = loadDevices(); // gets a sorted vector of all the id's of stored devices.
+	initLoRa();
 	mainLoop();
 }
 Gateway::~Gateway() {
 	// storeDevices(tracked_devices); // store last state of devices.
+	closeLoRa();
 	closeLogger(); // Good manners to close logging resources 
 }
 
@@ -72,6 +90,7 @@ inline void Gateway::sendAlert(const std::string& msg) {
 	*/
 	send_message(msg.c_str(), host_name.c_str(), client_name.c_str(), username.c_str(), password.c_str(), topic.c_str());
 }
+
 
 
 void Gateway::mainLoop() {

@@ -26,7 +26,6 @@ class Gateway {
 	std::chrono::milliseconds timeout_alarm_blaring;
 
 	// mainloop of the program
-	bool running;
 	void mainLoop();
 
 	void pollMessages();
