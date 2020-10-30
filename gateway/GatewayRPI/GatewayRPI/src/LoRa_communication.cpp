@@ -21,19 +21,14 @@ testing is needed if that message is lost if not read.
 
 
 #include <bcm2835.h>
-
-//#define RH_PLATFORM_RASPI
-//#include <RadioHead.h>
 #include <RHutil/RasPi.h>
-
-#define BOARD_PI_LORA_GATEWAY
-#include "../lib/RadioHead_fork/examples/raspi/RasPiBoards.h"
-
 #include <RH_RF95.h> // I think I'm going have to use either this without the manager or figure out a different lib
 //#include "./lib/RadioHead/RHDatagram.h"
 
 
+// copy pasted defines... mod based on how the board is setup
 
+// see https://github.com/hallard/RadioHead/blob/master/examples/raspi/rf95/rf95_server.cpp for setup
 
 #ifndef OUTPUT
   #define OUTPUT BCM2835_GPIO_FSEL_OUTP
@@ -47,9 +42,9 @@ testing is needed if that message is lost if not read.
   #define NOT_A_PIN 0xFF
 #endif
 
-// copy pasted defines... mod based on how the board is setup
-
-// see https://github.com/hallard/RadioHead/blob/master/examples/raspi/rf95/rf95_server.cpp for setup
+#define RF_CS_PIN  RPI_V2_GPIO_P1_24 // Slave Select on CE0 so P1 connector pin #24
+#define RF_IRQ_PIN RPI_V2_GPIO_P1_22 // IRQ on GPIO25 so P1 connector pin #22
+#define RF_RST_PIN RPI_V2_GPIO_P1_29 // Reset on GPIO5 so P1 connector pin #29
 
 // Our RFM95 Configuration 
 // The frequency range designated to LoRa Technology in the United States, Canada and South America is 902 to 928 MHz.
@@ -67,25 +62,35 @@ bool LoRa_active = false;
 void initLoRa(){
 	if (!bcm2835_init()) { // if the lora device is plugged in correctly this should work
 		log(logging::critical, "Error initializing LoRa!");
-	}
+		return;
+	}else{
 
+
+
+		//this section hangs system
+		// reading this https://www.airspayce.com/mikem/bcm2835/index.html "arious versions of Rasbian will crash or hang if certain GPIO pins are toggled"
+		//   A workaround is to add this line to your /boot/config.txt:
+		//   dtoverlay=gpio-no-irq
 #ifdef RF_IRQ_PIN
-	// IRQ Pin input/pull down
-	pinMode(RF_IRQ_PIN, INPUT);
-	bcm2835_gpio_set_pud(RF_IRQ_PIN, BCM2835_GPIO_PUD_DOWN);
-	// Now we can enable Rising edge detection
-	bcm2835_gpio_ren(RF_IRQ_PIN);
+		// IRQ Pin input/pull down
+		pinMode(RF_IRQ_PIN, INPUT);
+		fmt::print(fg(fmt::color::medium_purple), "trying to set gpio pud...wish luck\n");
+		bcm2835_gpio_set_pud(RF_IRQ_PIN, BCM2835_GPIO_PUD_DOWN);
+		fmt::print(fg(fmt::color::medium_purple), "sucessfully set gpio pud.\n");
+		// Now we can enable Rising edge detection
+		bcm2835_gpio_ren(RF_IRQ_PIN);
 #endif
 
 #ifdef RF_RST_PIN
-	printf( ", RST=GPIO%d", RF_RST_PIN );
-	// Pulse a reset on module
-	pinMode(RF_RST_PIN, OUTPUT);
-	digitalWrite(RF_RST_PIN, LOW );
-	bcm2835_delay((uint)150);
-	digitalWrite(RF_RST_PIN, HIGH );
-	bcm2835_delay((uint)100);
+		log(logging::info, ", RST=GPIO{}", RF_RST_PIN);
+		// Pulse a reset on module
+		pinMode(RF_RST_PIN, OUTPUT);
+		digitalWrite(RF_RST_PIN, LOW );
+		bcm2835_delay((uint)150);
+		digitalWrite(RF_RST_PIN, HIGH );
+		bcm2835_delay((uint)100);
 #endif
+	}
 
 	if (!rf95.init()) {
 		log(logging::critical, "RF95 module init failed, Please verify wiring/module");
@@ -149,9 +154,9 @@ void Gateway::pollMessages() {
 
 		if (rf95.recv(buf, &len)) {
 			// testing recived different from regular logging/will remove once it works.
-			fmt::print(fg(fmt::color::plum), "Packet[{}] #{} => #{}} {}dB: ", len, from, to, rssi);
+			fmt::print(fg(fmt::color::medium_purple), "Packet[{}] #{} => #{}} {}dB: ", len, from, to, rssi);
 			for (size_t i = 0; i< len; i++){
-				fmt::print(fg(fmt::color::plum), " {}", buf[i]);
+				fmt::print(fg(fmt::color::medium_purple), " {}", buf[i]);
 			}
 		} else {
 			Serial.print("receive failed");

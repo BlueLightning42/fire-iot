@@ -1,3 +1,4 @@
+# The absolute worst cmake file in this project...everything has been changed 100x before it worked and they all use different "hacks" to run
 
 cmake_minimum_required (VERSION 3.13)
 
@@ -28,11 +29,12 @@ if(LINUX) # throws errors from all the linux specific code when I test in Visual
 	include_directories(${RadioHeadDir}/)
 
 	add_library(RadioHead)
+
 	target_compile_definitions(RadioHead PUBLIC
 		-Dsimulator_h # stop error: redefinition of ‘class SerialSimulator’s
 		-DRASPBERRY_PI 
 		-DBCM2835_NO_DELAY_COMPATIBILITY
-		-Wreturn-type
+		-DRPI_V2_GPIO_P1_29=RPI_V2_GPIO_P1_26 # stop error in /RasPiBoards.h
 	)
 	target_include_directories(RadioHead PUBLIC 
 		${RadioHeadDir}/
@@ -50,10 +52,12 @@ if(LINUX) # throws errors from all the linux specific code when I test in Visual
     	${RadioHeadDir}/RHutil/RasPi.cpp
 	)
 
-	list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib/bcm283/src)
 	
-	target_link_libraries(RadioHead bcm2835)
+	find_library(bcm2835 CONFIG REQUIRED)
 
+	target_link_libraries(RadioHead bcm2835)
+	target_link_libraries(GateLib bcm2835)
+	
 	target_include_directories(RadioHead PUBLIC ${RadioHeadDir}/)
 
 	target_link_libraries(GateLib RadioHead)

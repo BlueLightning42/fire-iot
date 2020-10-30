@@ -60,13 +60,19 @@ void Gateway::readConfig() {
 #include <signal.h>
 
 //Flag for Ctrl-C
-volatile sig_atomic_t running = true;
-
-void sig_handler(int sig){
-	log(logging::warn, "Break received, exiting!");
-  	running = false;	
+namespace program{
+	volatile sig_atomic_t running = true;
 }
 
+void sig_handler(int sig){
+	log(logging::warn, "Break received, exiting!"); // probably not thread safe going remove in the future but for now leaving it.
+  	program::running = false;	
+}
+
+#else
+namespace program{
+	running = true;
+}
 #endif
 
 Gateway::Gateway() {
@@ -103,7 +109,7 @@ void Gateway::mainLoop() {
 	 *		 and reset data if its been changed? ie reset config data and reset tracked_devices
 	 *       if the database or config file have been changed
 	*/
-	while ( running ) {
+	while ( program::running ) {
 		pollMessages();
 		if ( !messages.empty() ) {
 			updateTrackedDevices();
