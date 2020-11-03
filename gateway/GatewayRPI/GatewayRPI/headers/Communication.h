@@ -7,7 +7,8 @@ enum Type: unsigned char {
 	heartbeat,	// 00
 	alarm,		// 01
 	error,		// 10 ? (see if more error types are needed)
-	no_communication // gateway error...should not be sent from edge device idk
+	no_communication, // gateway error...should not be sent from edge device idk
+	no_communication_and_fire
 };
 }
 /*

@@ -9,19 +9,21 @@
 
 #include <cstdio>
 #include <string>
-//#include <string.h> //memcopy for dependancies
+#include <filesystem>
 #include <cstring>
 
 #include <fstream>
 
+#include <thread>
+#include <mutex>
 // external library headers
 
 //prefered console library. Used to speed up dev of logging/debugging...
-#include "fmt/core.h"
-#include "fmt/format.h"
-#include "fmt/os.h"
-#include "fmt/color.h"
-#include "fmt/chrono.h"
+#include <fmt/core.h>
+#include <fmt/format.h>
+#include <fmt/os.h>
+#include <fmt/color.h>
+#include <fmt/chrono.h>
 
 //storage of user info from signup page. Using a wrapper for sqlite3
 #include <SQLiteCpp/SQLiteCpp.h>

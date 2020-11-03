@@ -1,5 +1,6 @@
 #include "../headers/Gateway.h"
 
+const char* config_file_name = "myConfig.txt";
 static const char* default_config_text = R"(# Config file (can be changed)
 
 # alert message 
@@ -11,14 +12,14 @@ topic = alert
 
 # Timeout values are in milliseconds
 timeout_no_communication = 180000
-timeout_alarm_blaring = 30000
+timeout_alarm_blaring = 20000
 )";
 
 // I've already added too many dependancies...adding hjson or ini or something just to make a config file that people won't touch often is too much
 void Gateway::readConfig() {
 	// its just a config file...overhead of this is neligible and optomizations are a waste of time.
 	// tfw it may seem weird to use c++ streams for input and c style files for output but the streams library is annoying me lately...I wish fmt handled input too
-	std::ifstream config_file("myConfig.txt");
+	std::ifstream config_file(config_file_name);
 	if ( config_file.is_open() ) {
 		std::string line;
 		while ( std::getline(config_file, line) ) {
@@ -40,7 +41,7 @@ void Gateway::readConfig() {
 	} else {
 		log(logging::warn, "Couldn't open config file.");
 		
-		auto out = fmt::output_file("myConfig.txt");
+		auto out = fmt::output_file(config_file_name);
 
 		out.print(default_config_text);
 		log(logging::info, "Replacing config with defaults");
@@ -51,11 +52,18 @@ void Gateway::readConfig() {
 		username = "fire";
 		password = "iot";
 		topic = "alert";
-		timeout_no_communication = std::chrono::minutes{ 3 };
-		timeout_no_communication = std::chrono::seconds{ 30 };
+		using namespace std::chrono;
+		timeout_no_communication = 3min;
+		timeout_alarm_blaring = 20s;
 	}
-}
 
+	fmt::print(" last {}  alarm {}\n", timeout_no_communication, timeout_alarm_blaring);
+
+
+	auto file = std::filesystem::path(config_file_name);
+	last_config_update = std::filesystem::last_write_time(file);
+}
+// the following section is just setting up Ctrl+C as a method of closing the program.
 #ifdef __linux__
 #include <signal.h>
 
@@ -68,27 +76,52 @@ void sig_handler(int sig){
 	log(logging::warn, "Break received, exiting!"); // probably not thread safe going remove in the future but for now leaving it.
   	program::running = false;	
 }
+void setup_CTRLC() {
+	signal(SIGINT, sig_handler); // Ctrl-C
+}
 
 #else
-namespace program{
-	running = true;
+#ifndef NOMINMAX
+#define NOMINMAX //windows.h is a awful mess that defines gross coliding macros...that is all
+#endif
+#include <windows.h>
+//Flag for Ctrl-C on windows
+namespace program {
+	volatile bool running = true;
+}
+
+BOOL WINAPI consoleHandler(DWORD signal) {
+	if (signal == CTRL_C_EVENT) {
+		log(logging::warn, "Break received, exiting!");
+		program::running = false;
+	}
+
+	return TRUE;
+}
+
+void setup_CTRLC() {
+	if (!SetConsoleCtrlHandler(consoleHandler, TRUE))
+		log(logging::critical, "Unable to setup Ctrl+C handler");
 }
 #endif
 
-Gateway::Gateway() {
-#ifdef __linux__
-	signal(SIGINT, sig_handler); // Ctrl-C
-#endif
+// the follwing is simply setting up and cleaning up the program state
+Gateway::Gateway(): message_recived(false) {
+	setup_CTRLC();
 	openLogger(); // HAS to be opened before any logging can be done otherwise will crash on file write
 	readConfig(); // Store some configurable values. (can be changed by users)
 	tracked_devices = loadDevices(); // gets a sorted vector of all the id's of stored devices.
 	initLoRa();
+	makeMessageThread();
+	auto now = std::chrono::steady_clock::now();
+	last_files_updated = now;
+	last_logging_updated = now;
 	mainLoop();
 }
 Gateway::~Gateway() {
 	// storeDevices(tracked_devices); // store last state of devices.
 	closeLoRa();
-	closeLogger(); // Good manners to close logging resources 
+	closeLogger(); // Good manners to close logging resources...the operating system probably can if its shutoff but its good manners all the same.
 }
 
 inline void Gateway::sendAlert(const std::string& msg) {
@@ -115,15 +148,48 @@ void Gateway::mainLoop() {
 			updateTrackedDevices();
 		}
 		checkForTimeouts();
+		periodicReset();
 	}
 }
 
-
+void Gateway::periodicReset() {
+	// every minute or so check if files have changed.
+	using namespace std::chrono;
+	namespace fs = std::filesystem;
+	auto now = steady_clock::now();
+	if (now - this->last_files_updated > 2min) {
+		this->last_files_updated = now;
+		if (fs::exists(config_file_name)) {
+			auto file = fs::path(config_file_name);
+			auto last_write = fs::last_write_time(file);
+			if (last_write != this->last_config_update) {
+				log(logging::warn, "Config file was changed...attempting to re-read it.");
+				readConfig();
+			}
+		}
+		else { // if file doesn't exist
+			log(logging::warn, "Config file not found...attempting to reset it.");
+			readConfig();
+		}
+	}
+	// every 24 hours or so reset logger...only comes into effect if this becomes a long running application
+	if (now - this->last_logging_updated > 24h) {
+		log(logging::info, "Refreshing logger");
+		this->last_logging_updated = now;
+		closeLogger();
+		openLogger();
+	}
+}
 void Gateway::updateTrackedDevices() {
 	/* Itterate over all recived messages.
 	 * If the message is a heartbeat update its last_communication so it doesn't get stale and 
 	 * If the message is a Alarm start a countdown/ check the current countdown for sending a alarm message
 	*/
+	if (tracked_devices.empty()) {
+		log(logging::critical, "empty tracked devices");
+		messages.clear();
+		return;
+	}
 	using namespace std::chrono;
 	auto now = steady_clock::now();
 	for ( const auto& message : messages ) {
@@ -134,7 +200,9 @@ void Gateway::updateTrackedDevices() {
 			  * Update the tracked communication time with the current time.
 			 */
 			auto to_update = std::lower_bound(tracked_devices.begin(), tracked_devices.end(), message.id);
-			if ( to_update->id == message.id ) {
+			if (to_update == tracked_devices.end()) {
+				log(logging::warn, "heartbeat recived from unknown device with id: {}", message.id);
+			}else if ( to_update->id == message.id ) {
 				log(logging::info, "Recived Ok signal from {}", message.id);
 				to_update->last_communication = now;
 				to_update->first_detection = steady_clock::time_point::max();
@@ -151,7 +219,9 @@ void Gateway::updateTrackedDevices() {
 			  * if the current alarm has been going on longer than the timout time then send a alert.
 			 */
 			auto dev = std::lower_bound(tracked_devices.begin(), tracked_devices.end(), message.id);
-			if ( dev->id == message.id ) {
+			if (dev == tracked_devices.end()) {
+				log(logging::critical, "alarm message recived from unknown device with id: {}", message.id);
+			}else if (dev->id == message.id) {
 				 if ( dev->first_detection == steady_clock::time_point::max() ) {
 					 log(logging::warn, "alarm started going off with id:{}", message.id);
 					 dev->first_detection = now;
@@ -186,11 +256,20 @@ void Gateway::checkForTimeouts() {
 	 * is greater than the defined timeout time in timeout_no_communication
 	 * if it has timed out then prepare a alert message and send it to send_message
 	*/
-	auto now = std::chrono::steady_clock::now();
-	for ( const auto &device : tracked_devices ) {
+	using namespace std::chrono;
+	auto now = steady_clock::now();
+	constexpr auto max_time = steady_clock::time_point::max();
+	for ( auto &device : tracked_devices ) {
 		if ( now - device.last_communication > timeout_no_communication ) {
-			auto fire_alert = prepareAlert(device.id, typ::no_communication);
+			std::string fire_alert;
+			if (device.first_detection != max_time) {
+				fire_alert = prepareAlert(device.id, typ::no_communication_and_fire);	
+			}else {
+				fire_alert = prepareAlert(device.id, typ::no_communication);
+			}
 			this->sendAlert(fire_alert);
+			device.last_communication = max_time; //forces it to stop giving updates after one tick
+			device.first_detection = max_time;
 		}
 	}
 }

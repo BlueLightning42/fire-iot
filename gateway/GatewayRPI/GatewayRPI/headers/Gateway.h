@@ -10,13 +10,21 @@ class Gateway {
  public:
 	 Gateway();
 	~Gateway();
-	void sendAlert(const std::string& msg);
  private:
 	void readConfig();
+	void sendAlert(const std::string& msg);
+	std::filesystem::file_time_type last_config_update;
+	std::chrono::steady_clock::time_point last_files_updated; // to check for updates/reset every few minutes.
+	std::chrono::steady_clock::time_point last_logging_updated; // to reset logger every few hours.
+
 	std::vector<Device> tracked_devices; // vector of devices that are communicating with the Gateway
 	std::vector<Message> messages; // vector acting as a stack of all recived messages.
-	bool message_recived; // overlaps with !messages.empty() ... keep for readability or replace?
+	std::vector<Message> recived; // vector acting as a stack of all recived messages for the message thread
+	std::mutex m;
+	bool message_recived;
+	std::thread message_thread;
 
+	// config info.
 	std::string host_name; // for alert connection
 	std::string client_name; // for alert connection
 	std::string username; // for alert connection
@@ -28,7 +36,10 @@ class Gateway {
 	// mainloop of the program
 	void mainLoop();
 
+	void makeMessageThread();
+
 	void pollMessages();
+	void periodicReset();
 	void updateTrackedDevices();
 	void checkForTimeouts();
 };

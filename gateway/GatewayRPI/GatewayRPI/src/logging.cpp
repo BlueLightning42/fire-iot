@@ -15,7 +15,22 @@ void openLogger() {
 	*/
 	std::string log_file_name;
 	log_file_name = fmt::format("{:%Y_%m_%d}.log", fmt::localtime(now));
-#ifdef __STDC_LIB_EXT1__
+
+	namespace fs = std::filesystem;
+	for (auto& p : fs::directory_iterator(".")) { // clear log files after a day
+		auto name = p.path().filename().string();
+		auto ex = p.path().extension().string();
+		//fmt::print("dir has: {}, {}\n", name, ex);
+		if (ex == ".log") {
+			if (name != log_file_name) {
+				fs::remove(p);
+			}
+		}
+	}
+
+
+
+#ifdef _MSC_VER
 	fopen_s(&logging::outFile, log_file_name.c_str(), "a");
 #else
 	logging::outFile = fopen(log_file_name.c_str(), "a");
