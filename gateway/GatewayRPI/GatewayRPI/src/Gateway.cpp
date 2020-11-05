@@ -1,68 +1,7 @@
 #include "../headers/Gateway.h"
 
-const char* config_file_name = "myConfig.txt";
-static const char* default_config_text = R"(# Config file (can be changed)
+// the main logic of the program. 
 
-# alert message 
-hostname = localhost
-ClientName = OG_Gateway
-username = fire
-password = iot
-topic = alert
-
-# Timeout values are in milliseconds
-timeout_no_communication = 180000
-timeout_alarm_blaring = 20000
-)";
-
-// I've already added too many dependancies...adding hjson or ini or something just to make a config file that people won't touch often is too much
-void Gateway::readConfig() {
-	// its just a config file...overhead of this is neligible and optomizations are a waste of time.
-	// tfw it may seem weird to use c++ streams for input and c style files for output but the streams library is annoying me lately...I wish fmt handled input too
-	std::ifstream config_file(config_file_name);
-	if ( config_file.is_open() ) {
-		std::string line;
-		while ( std::getline(config_file, line) ) {
-			line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end()); // remove whitespace
-			if ( line[0] == '#' || line.empty() ) continue; //ignore comment lines and empty lines
-
-			auto delimiterPos = line.find("=");
-			auto name = line.substr(0, delimiterPos);
-			auto value = line.substr(delimiterPos + 1);
-			
-			if ( name == "hostname" ) host_name = value;
-			else if ( name == "ClientName" ) client_name = value;
-			else if ( name == "username" ) username = value;
-			else if ( name == "password" ) password = value;
-			else if ( name == "topic" ) topic = value;
-			else if ( name == "timeout_no_communication" ) timeout_no_communication = std::chrono::milliseconds(std::stoi(value));
-			else if ( name == "timeout_alarm_blaring" ) timeout_alarm_blaring = std::chrono::milliseconds(std::stoi(value));
-		}
-	} else {
-		log(logging::warn, "Couldn't open config file.");
-		
-		auto out = fmt::output_file(config_file_name);
-
-		out.print(default_config_text);
-		log(logging::info, "Replacing config with defaults");
-
-		//default values
-		host_name = "localhost";
-		client_name = "OG_Gateway";
-		username = "fire";
-		password = "iot";
-		topic = "alert";
-		using namespace std::chrono;
-		timeout_no_communication = 3min;
-		timeout_alarm_blaring = 20s;
-	}
-
-	fmt::print(" last {}  alarm {}\n", timeout_no_communication, timeout_alarm_blaring);
-
-
-	auto file = std::filesystem::path(config_file_name);
-	last_config_update = std::filesystem::last_write_time(file);
-}
 // the following section is just setting up Ctrl+C as a method of closing the program.
 #ifdef __linux__
 #include <signal.h>
@@ -222,18 +161,21 @@ void Gateway::updateTrackedDevices() {
 			if (dev == tracked_devices.end()) {
 				log(logging::critical, "alarm message recived from unknown device with id: {}", message.id);
 			}else if (dev->id == message.id) {
-				 if ( dev->first_detection == steady_clock::time_point::max() ) {
-					 log(logging::warn, "alarm started going off with id:{}", message.id);
-					 dev->first_detection = now;
-				 }
-				 if ( now - dev->first_detection > timeout_alarm_blaring ) {
-					 auto fire_alert = prepareAlert(message.id, message.type);
-					 this->sendAlert(fire_alert);
-					 // send repeated every timout
-					 // dev->first_detection = now;
-					 // send once unstil its ben set to heartbeat and back.
-					 dev->first_detection = steady_clock::time_point::max() - milliseconds{ 1 };
-				 }
+				if ( dev->first_detection == steady_clock::time_point::max() ) {
+					// if first_detection is at sentinal value set it to now/ start counting down.
+					log(logging::warn, "alarm started going off with id:{}", message.id);
+					dev->first_detection = now;
+				}
+				if ( now - dev->first_detection > timeout_alarm_blaring ) {
+					auto fire_alert = prepareAlert(message.id, message.type);
+					this->sendAlert(fire_alert);
+					// send repeated every timout
+					// dev->first_detection = now;
+					// send once unstil its ben set to heartbeat and back.
+					dev->first_detection = steady_clock::time_point::max() - milliseconds{ 1 };
+				}
+				// make timout time equal to alarm time to make sure the ->alarm recived ->no communicaiton case happens much lower than the 3 minutes.
+				dev->last_communication = now - timeout_alarm_blaring + timeout_no_communication;
 			} else {
 				log(logging::critical, "alarm message recived from unknown device with id: {}", message.id);
 			}

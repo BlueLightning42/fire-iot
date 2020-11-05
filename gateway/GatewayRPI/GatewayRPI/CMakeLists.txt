@@ -30,5 +30,12 @@ target_compile_features(GateLib PUBLIC cxx_std_17)
 # Add source to this project's executable.
 add_executable (${PROJECT_NAME} main.cpp)
 
-# add the gateway library to main
-target_link_libraries(${PROJECT_NAME} PRIVATE GateLib)
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+	# GCC does not link standard libary features by default...
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
+	target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs GateLib)
+else()
+	# add the gateway library to main
+	target_link_libraries(${PROJECT_NAME} PRIVATE GateLib)
+endif()

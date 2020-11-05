@@ -34,7 +34,6 @@ if(LINUX) # throws errors from all the linux specific code when I test in Visual
 		-Dsimulator_h # stop error: redefinition of ‘class SerialSimulator’s
 		-DRASPBERRY_PI 
 		-DBCM2835_NO_DELAY_COMPATIBILITY
-		-DRPI_V2_GPIO_P1_29=RPI_V2_GPIO_P1_26 # stop error in /RasPiBoards.h
 	)
 	target_include_directories(RadioHead PUBLIC 
 		${RadioHeadDir}/

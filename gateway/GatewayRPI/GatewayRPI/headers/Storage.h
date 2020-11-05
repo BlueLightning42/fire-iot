@@ -14,7 +14,7 @@ struct Device {
 	const bool operator<(const uint16_t& _id) const {
 		return this->id < _id;
 	}
-	Device(): id(NULL),
+	Device(): id(0),
 		last_communication(std::chrono::steady_clock::time_point::max()),
 		first_detection(std::chrono::steady_clock::time_point::max()) {}
 	Device(uint16_t _id): id(_id),

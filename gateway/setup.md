@@ -1,20 +1,20 @@
 # setup
 first update the package list
 `sudo apt update`
+Optional but might fix any potential errors in the future __to upgrade anything in the pi__
+`sudo apt upgrade`
 Install required programs and libraries
 `sudo apt install cmake git sqlite3 -y`
-navigate to download folder (for example /Fire) and clone from github if you haven't already.
-`git clone https://github.com/BlueLightning42/fire-iot.git --recurse-submodules`
-
-setup/install bcm2835
-`cd gateway/GatewayRPI/GatewayRPI/lib/bcm283/`
+Install the bcm2835 library from source
+`wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.68.tar.gz`
+`tar -xzvf bcm2835-1.68.tar.gz`
+`cd bcm2835-1.68/`
 `./configure`
-`make`
-`sudo make check`
-`sudo make install` 
+`sudo make`
+`sudo make install`
 
-(cd back to main folder)
-`cd ../../../../..`
+navigate to the folder you plan to download/build the gateway (for example /Fire) and clone from github if you haven't already.
+`git clone https://github.com/BlueLightning42/fire-iot.git --recurse-submodules`
 
 then for the gateway create a build directory
 `cd /gateway/GatewayRPI`

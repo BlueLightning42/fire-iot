@@ -5,6 +5,7 @@
 #include "Storage.h"
 #include "Communication.h"
 
+inline constexpr const char* config_file_name = "myConfig.txt";
 
 class Gateway {
  public:
