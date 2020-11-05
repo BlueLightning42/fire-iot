@@ -22,6 +22,7 @@ testing is needed if that message is lost if not read.
 // https://www.airspayce.com/mikem/bcm2835/ needs to be downloaded and init...cant figure out if I can make a submodule yet
 
 #include <bcm2835.h>
+#include <unistd.h>
 #include <RHutil/RasPi.h>
 #include <RH_RF95.h> // I think I'm going have to use either this without the manager or figure out a different lib
 //#include "./lib/RadioHead/RHDatagram.h"
@@ -63,9 +64,17 @@ bool LoRa_active = false;
 
 void initLoRa(){
 	if (!bcm2835_init()) { // if the lora device is plugged in correctly this should work
-		log(logging::critical, "Error initializing LoRa!");
+		log(logging::critical, "Error in bcm2835 init. LoRa not initialed! debug-(file:{} line:{})", __FILE__, __LINE__);
 		return;
 	}else{
+		if( geteuid() != 0 ){
+			// I think bcm only needs spi if not root.
+			if(!bcm2835_spi_begin()){
+				log(logging::critical, "Error begining bcm2835 spi. LoRa not initialized! debug-(file:{} line:{})", __FILE__, __LINE__);
+				return;
+			}
+		}
+		
 		//this section hangs system
 		// reading this https://www.airspayce.com/mikem/bcm2835/index.html "arious versions of Rasbian will crash or hang if certain GPIO pins are toggled"
 		//   A workaround is to add this line to your /boot/config.txt:
@@ -93,7 +102,7 @@ void initLoRa(){
 	fmt::print("Got here 0\n");
 
 	if (!rf95.init()) {
-		log(logging::critical, "RF95 module init failed, Please verify wiring/module");
+		log(logging::critical, "RF95 module init failed, Please verify wiring/module. debug-(file:{} line:{})", __FILE__, __LINE__);
 		return;
 	}else{
 		LoRa_active = true;
