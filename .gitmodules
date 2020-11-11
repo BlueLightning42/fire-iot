@@ -9,10 +9,7 @@
 	url = https://github.com/eclipse/paho.mqtt.c.git
 [submodule "gateway/GatewayRPI/GatewayRPI/lib/MQTT_CPP"]
 	path = gateway/GatewayRPI/GatewayRPI/lib/MQTT_CPP
-	url = git@github.com:eclipse/paho.mqtt.cpp.git
-[submodule "gateway/GatewayRPI/GatewayRPI/lib/bcm283"]
-	path = gateway/GatewayRPI/GatewayRPI/lib/bcm283
-	url = https://github.com/matthiasbock/bcm2835.git
+	url = https://github.com/eclipse/paho.mqtt.cpp.git
 [submodule "gateway/GatewayRPI/GatewayRPI/lib/RadioHead_fork"]
 	path = gateway/GatewayRPI/GatewayRPI/lib/RadioHead_fork
 	url = https://github.com/hallard/RadioHead.git
