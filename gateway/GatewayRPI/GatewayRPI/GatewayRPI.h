@@ -35,22 +35,11 @@
 
 // communication stuff...probably some of the more complicated parts of this
 
-#ifdef __linux__
 // TODO: decide if its simpler to use QOS1 and figure it out on the fire department end.
 // Reminder
 // QOS0 = at most once.
 // QOS1 = at least once.
 // QOS2 = exactly once.
 
-#define DISABLE_MQTT 1
 
-#ifndef DISABLE_MQTT
-#define MQTTCLIENT_QOS2 1
-//communication with fire department over mqtt
-#include "./lib/mqtt/MQTTClient/src/MQTTClient.h"
-
-#include "./lib/mqtt/MQTTClient/src/linux/linux.cpp"
-#endif
-
-#endif
-
+#include <mqtt/async_client.h>

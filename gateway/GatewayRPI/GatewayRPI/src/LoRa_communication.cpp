@@ -213,7 +213,7 @@ void Gateway::makeMessageThread() {
 				s = s.substr(1);
 			}
 			try {
-				int num = std::stoi(s);
+				uint16_t num = std::stoi(s);
 				Message fake{0, num, type, 0 };
 				recived.emplace_back(fake);
 			}
