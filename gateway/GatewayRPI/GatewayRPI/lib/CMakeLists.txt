@@ -18,8 +18,11 @@ set(SQLITECPP_RUN_CPPCHECK OFF CACHE BOOL "" FORCE)
 set(SQLITECPP_RUN_CPPLINT OFF CACHE BOOL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/SQLite)
 
-# Link gatelib with with SQLiteCpp and fmt
+# Link gatelib with with SQLiteCpp
 target_link_libraries(GateLib SQLiteCpp)
+
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/MQTT_CPP)
 
 
 if(LINUX) # throws errors from all the linux specific code when I test in Visual studio...runs as normal on the pi

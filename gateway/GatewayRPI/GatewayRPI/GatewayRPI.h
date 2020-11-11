@@ -44,7 +44,7 @@
 #ifndef DISABLE_MQTT
 #define MQTTCLIENT_QOS2 1
 //communication with fire department over mqtt
-#include "./lib/mqtt/MQTTClient/src/MQTTClient.h"
+#include <MQTTClient.h>
 
 #ifdef __linux__
 #include "./lib/mqtt/MQTTClient/src/linux/linux.cpp"

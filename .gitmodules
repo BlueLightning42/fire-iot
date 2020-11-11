@@ -4,9 +4,6 @@
 [submodule "gateway/GatewayRPI/GatewayRPI/lib/SQLite"]
 	path = gateway/GatewayRPI/GatewayRPI/lib/SQLite
 	url = https://github.com/SRombauts/SQLiteCpp.git
-[submodule "gateway/GatewayRPI/GatewayRPI/lib/MQTT_C"]
-	path = gateway/GatewayRPI/GatewayRPI/lib/MQTT_C
-	url = https://github.com/eclipse/paho.mqtt.c.git
 [submodule "gateway/GatewayRPI/GatewayRPI/lib/MQTT_CPP"]
 	path = gateway/GatewayRPI/GatewayRPI/lib/MQTT_CPP
 	url = https://github.com/eclipse/paho.mqtt.cpp.git
