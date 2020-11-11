@@ -21,9 +21,20 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/SQLite)
 # Link gatelib with with SQLiteCpp
 target_link_libraries(GateLib SQLiteCpp)
 
-
+if(WIN32)
+	# absolute paths are garbage but windows is garbage as well so w/e this library is annoying to build
+	set(CMAKE_PREFIX_PATH "C:/mqtt/paho-c")
+endif()
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/MQTT_CPP)
+include_directories(${RadioHeadDir}/MQTT_CPP/src)
+if(LINUX)
+	target_link_libraries(GateLib paho-mqttpp3)
+else()
+	target_link_libraries(GateLib paho-mqttpp3-static)
+endif()
 
+
+# ~~~~~~~~~~~~~~~~~ LoRa communication is here ~~~~~~~~~~~~~~~
 
 if(LINUX) # throws errors from all the linux specific code when I test in Visual studio...runs as normal on the pi
 	# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/MQTT_C) # dependancy for the c++ mqtt

@@ -41,14 +41,5 @@
 // QOS1 = at least once.
 // QOS2 = exactly once.
 
-#ifndef DISABLE_MQTT
-#define MQTTCLIENT_QOS2 1
-//communication with fire department over mqtt
-#include <MQTTClient.h>
 
-#ifdef __linux__
-#include "./lib/mqtt/MQTTClient/src/linux/linux.cpp"
-#endif
-
-#endif
-
+#include <mqtt/async_client.h>
