@@ -30,9 +30,15 @@ class Gateway {
 	std::string client_name; // for alert connection
 	std::string username; // for alert connection
 	std::string password; // for alert connection
-	std::string topic; // for alert connection
+	std::string topic_name; // for alert connection
 	std::chrono::milliseconds timeout_no_communication;
 	std::chrono::milliseconds timeout_alarm_blaring;
+
+	mqtt::async_client_ptr cli;
+	bool MQTT_connected;
+	void send_MQTT_message(const std::string& msg);
+	void initMQTT();
+	void closeMQTT();
 
 	// mainloop of the program
 	void mainLoop();

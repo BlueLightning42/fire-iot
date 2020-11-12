@@ -45,7 +45,7 @@ void setup_CTRLC() {
 #endif
 
 // the follwing is simply setting up and cleaning up the program state
-Gateway::Gateway(): message_recived(false) {
+Gateway::Gateway(): message_recived(false), MQTT_connected(false) {
 	setup_CTRLC();
 	openLogger(); // HAS to be opened before any logging can be done otherwise will crash on file write
 	readConfig(); // Store some configurable values. (can be changed by users)
@@ -55,18 +55,19 @@ Gateway::Gateway(): message_recived(false) {
 	auto now = std::chrono::steady_clock::now();
 	last_files_updated = now;
 	last_logging_updated = now;
+	initMQTT();
 	mainLoop();
 }
 Gateway::~Gateway() {
 	// storeDevices(tracked_devices); // store last state of devices.
 	closeLoRa();
+	closeMQTT();
 	closeLogger(); // Good manners to close logging resources...the operating system probably can if its shutoff but its good manners all the same.
 }
 
 inline void Gateway::sendAlert(const std::string& msg) {
-	/* Replace send_message with a custom function or library populated with relevant info if changed from MQTT
-	*/
-	send_message(msg.c_str(), host_name.c_str(), client_name.c_str(), username.c_str(), password.c_str(), topic.c_str());
+	// makes it easier to replace MQTT by swapping out this part.
+	send_MQTT_message(msg);
 }
 
 
@@ -96,7 +97,7 @@ void Gateway::periodicReset() {
 	using namespace std::chrono;
 	namespace fs = std::filesystem;
 	auto now = steady_clock::now();
-	if (now - this->last_files_updated > 2min) {
+	if (now - this->last_files_updated > 30s) {
 		this->last_files_updated = now;
 		if (fs::exists(config_file_name)) {
 			auto file = fs::path(config_file_name);

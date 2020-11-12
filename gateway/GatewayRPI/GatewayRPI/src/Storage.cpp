@@ -30,14 +30,6 @@ std::vector<Device> loadDevices() {
 	return {};
 }
 
-/*
-on shutdown store all devices into a small database file (sqllite3?) ?
-currently not implemented because devices are populated 
-void storeDevices(std::vector<Device> data) {
-
-}
-*/
-
 std::string prepareAlert(uint16_t id, typ::Type alert_type) {
 	const char* alert_name = "General Error";
 	switch (alert_type) {
@@ -77,7 +69,7 @@ hostname = localhost
 ClientName = OG_Gateway
 username = fire
 password = iot
-topic = alert
+topic = alert/fire
 
 # Timeout values are in milliseconds
 timeout_no_communication = 180000
@@ -103,7 +95,7 @@ void Gateway::readConfig() {
 			else if ( name == "ClientName" ) client_name = value;
 			else if ( name == "username" ) username = value;
 			else if ( name == "password" ) password = value;
-			else if ( name == "topic" ) topic = value;
+			else if ( name == "topic" ) topic_name = value;
 			else if ( name == "timeout_no_communication" ) timeout_no_communication = std::chrono::milliseconds(std::stoi(value));
 			else if ( name == "timeout_alarm_blaring" ) timeout_alarm_blaring = std::chrono::milliseconds(std::stoi(value));
 		}
@@ -120,7 +112,7 @@ void Gateway::readConfig() {
 		client_name = "OG_Gateway";
 		username = "fire";
 		password = "iot";
-		topic = "alert";
+		topic_name = "alert/fire";
 		using namespace std::chrono;
 		timeout_no_communication = 3min;
 		timeout_alarm_blaring = 20s;
