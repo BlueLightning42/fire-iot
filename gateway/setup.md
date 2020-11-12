@@ -1,4 +1,35 @@
 # setup
+
+# Quick setup
+
+To help save time theres a install.sh script in this folder.
+*To run it please clone this repository into a folder on the pi then navigate to the gateway folder and run the install.sh script*
+### Steps
+
+If git is not installed
+* `sudo apt install git`
+If you want a custom folder name make a folder and clone this repository into it
+* `mkdir Fire`
+* `cd Fire`
+* `git clone https://github.com/BlueLightning42/fire-iot.git --recurse-submodules .`
+otherwise just clone it into the fire-iot folder with
+* `git clone https://github.com/BlueLightning42/fire-iot.git --recurse-submodules`
+navigate to the gateway folder
+* `cd gateway`
+and run the install script
+* `./install.sh`
+If you want to build the project at the same time you can pass a an extra variable/ run the install script with
+* `./install.sh build`
+otherwise navigate to the build director at
+* `cd GatewayRPI/build`
+...and run cmake/make
+* `cmake ..`
+* `make`
+then head down to the *"running the program"* section
+
+# Manual
+*If you don't want to run random scripts (understandable) you can follow all the steps the install script takes manually*
+
 first update the package list
 * `sudo apt update`
 
@@ -16,8 +47,18 @@ Install the bcm2835 library from source
 * `sudo make`
 * `sudo make install`
 
+Install the mqtt.c library from source
+* `git clone https://github.com/eclipse/paho.mqtt.c.git`
+* `cd paho.mqtt.c`
+* `git checkout v1.3.6`
+* `cmake -Bbuild -H. -DPAHO_WITH_SSL=ON -DPAHO_BUILD_STATIC=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DPAHO_ENABLE_TESTING=OFF`
+* `sudo env "PATH=$PATH" cmake --build build/ --target install`
+* `sudo ldconfig`
+
+You can either leave those files or delete them now that you are done.
+
 navigate to the folder you plan to download/build the gateway (for example /Fire) and clone from github if you haven't already.
-* `git clone https://github.com/BlueLightning42/fire-iot.git --recurse-submodules`
+* `git clone https://github.com/BlueLightning42/fire-iot.git --recurse-submodules .`
 
 then for the gateway create a build directory
 * `cd /gateway/GatewayRPI`
@@ -28,6 +69,8 @@ run cmake and build
 * `cmake ..`
 * `make`
 
+# Running the program
+Make sure you are in the correct directory (GatewayRPI/build)
 now all you have to do is run the program. - __I'm not sure yet if it can be run without root so for now__
 * `sudo GatewayRPI/GatewayRPI`
 
