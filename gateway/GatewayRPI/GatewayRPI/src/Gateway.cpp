@@ -97,7 +97,7 @@ void Gateway::periodicReset() {
 	using namespace std::chrono;
 	namespace fs = std::filesystem;
 	auto now = steady_clock::now();
-	if (now - this->last_files_updated > 30s) {
+	if (now - this->last_files_updated > 2min) {
 		this->last_files_updated = now;
 		if (fs::exists(config_file_name)) {
 			auto file = fs::path(config_file_name);

@@ -81,6 +81,7 @@ void Gateway::readConfig() {
 	// its just a config file...overhead of this is neligible and optomizations are a waste of time...considering its only read at initialization (and file deletion/editing)
 	// tfw it may seem weird to use c++ streams for input and fmt files for output but the streams library is annoying me lately...I wish fmt handled input too
 	std::ifstream config_file(config_file_name);
+	
 	if ( config_file.is_open() ) {
 		std::string line;
 		while ( std::getline(config_file, line) ) {
@@ -102,7 +103,10 @@ void Gateway::readConfig() {
 	} else {
 		log(logging::warn, "Couldn't open config file.");
 		
+		namespace fs = std::filesystem;
 		auto out = fmt::output_file(config_file_name);
+		std::error_code ec;
+		fs::permissions(config_file_name, fs::perms::all, fs::perm_options::add, ec); // make sure config file has all permissions... if rwxrwxrwx is bad...then change it to rwxrwx--- I guess
 
 		out.print(default_config_text);
 		log(logging::info, "Replacing config with defaults");
