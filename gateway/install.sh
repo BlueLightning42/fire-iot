@@ -1,48 +1,76 @@
-#!/bin/bash 
+#!/bin/bash
+no_build=1
+no_update=1
+no_install=1
+run_after=0
+while getopts "bnir" OPTION; do
+        case "$OPTION" in
+                b) 
+					echo -e "\e[91mno build\e[0m"
+					no_build=0 ;;
+                n) 
+					echo -e "\e[91mno update\e[0m"
+					no_update=0 ;;
+                i) 
+					echo -e "\e[91mno install\e[0m"
+					no_install=0 ;;
+                r) 
+					echo -e "\e[32mrunning after install\e[0m"
+					run_after=1 ;;
+        esac
+done
 
 set -ex
 
-echo "Installing dependancies"
-sudo apt update
-sudo apt upgrade
-sudo apt install cmake git sqlite3 -y
+if [[ $no_update == 1 ]]; then
+	{ echo -e "\e[36m\e[4m >Installing dependancies< \e[0m"; } 2> /dev/null
+	sudo apt update
+	sudo apt upgrade -y
+fi
 
-mkdir build
-cd build
+sudo apt install cmake git sqlite3 libssl-dev -y
 
-echo "Installing bcm2835"
-wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.68.tar.gz
-tar -xzvf bcm2835-1.68.tar.gz
-cd bcm2835-1.68/
-./configure
-sudo make
-sudo make install
-cd ..
+if [[ $no_install == 1 ]]; then
+	mkdir build -p
+	cd build
 
-echo "Installing mqtt.c"
-git clone https://github.com/eclipse/paho.mqtt.c.git
-cd paho.mqtt.c
-git checkout v1.3.6
+	{ echo -e "\e[36m\e[4m >Installing bcm2835< \e[0m"; } 2> /dev/null
+	wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.68.tar.gz
+	tar -xzvf bcm2835-1.68.tar.gz
+	cd bcm2835-1.68/
+	./configure
+	sudo make
+	sudo make install
+	cd ..
 
-cmake -Bbuild -H. -DPAHO_WITH_SSL=ON -DPAHO_BUILD_STATIC=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DPAHO_ENABLE_TESTING=OFF
-sudo env "PATH=$PATH" cmake --build build/ --target install
-sudo ldconfig
-cd ..
+	{ echo -e "\e[36m\e[4m >Installing mqtt.c< \e[0m"; } 2> /dev/null
+	git clone https://github.com/eclipse/paho.mqtt.c.git
+	cd paho.mqtt.c
+	git checkout v1.3.6
 
-cd ..
-sudo rm build -r
+	cmake -Bbuild -H. -DPAHO_WITH_SSL=ON -DPAHO_BUILD_STATIC=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DPAHO_ENABLE_TESTING=OFF
+	sudo env "PATH=$PATH" cmake --build build/ --target install
+	sudo ldconfig
+	cd ..
+	cd ..
+	sudo rm build -r
+fi
 
-echo "Creating Build folder in GatewayRPI"
-
+{ echo -e "\e[36m\e[4m >Creating Build folder in GatewayRPI< \e[0m"; } 2> /dev/null
 cd GatewayRPI
-mkdir build
+mkdir build -p
 
-var=$1
-if [[ -n "$var" && "$var" == "build" ]]; then
+if [[ $no_build == 1 ]]; then
     cd build
     cmake ..
     make
-    echo "navigate to GatewayRPI/build and run the program with 'sudo GatewayRPI/GatewayRPI'"
+    { echo -e "\e[36m\e[4m >navigate to GatewayRPI/build and run the program with 'sudo GatewayRPI/GatewayRPI' \e[0m"; } 2> /dev/null
+fi
+
+
+if [[ $run_after == 1 ]]; then
+	cd GatewayRPI
+	sudo ./GatewayRPI
 fi
 
 exit 0

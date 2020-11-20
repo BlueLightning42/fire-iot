@@ -53,7 +53,7 @@ if(LINUX) # throws errors from all the linux specific code when I test in Visual
 		${RadioHeadDir}/
 	)
 	# all the sources in gateway\GatewayRPI\GatewayRPI\lib\RadioHead_fork\examples\raspi\rf95\Makefile
-	target_sources(RadioHead PUBLIC
+	target_sources(RadioHead PRIVATE
     	${RadioHeadDir}/RH_RF95.h
     	${RadioHeadDir}/RH_RF95.cpp
     	${RadioHeadDir}/RHDatagram.cpp
@@ -72,7 +72,6 @@ if(LINUX) # throws errors from all the linux specific code when I test in Visual
 	target_link_libraries(GateLib bcm2835)
 	
 	target_include_directories(RadioHead PUBLIC ${RadioHeadDir}/)
-
 	target_link_libraries(GateLib RadioHead)
 
 endif()

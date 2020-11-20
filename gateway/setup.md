@@ -8,24 +8,29 @@ To help save time theres a install.sh script in this folder.
 
 If git is not installed
 * `sudo apt install git`
+
 If you want a custom folder name make a folder and clone this repository into it
 * `mkdir Fire`
 * `cd Fire`
 * `git clone https://github.com/BlueLightning42/fire-iot.git --recurse-submodules .`
+
 otherwise just clone it into the fire-iot folder with
 * `git clone https://github.com/BlueLightning42/fire-iot.git --recurse-submodules`
+
 navigate to the gateway folder
 * `cd gateway`
+
 and run the install script
 * `./install.sh`
-If you want to build the project at the same time you can pass a an extra variable/ run the install script with
-* `./install.sh build`
-otherwise navigate to the build director at
-* `cd GatewayRPI/build`
-...and run cmake/make
-* `cmake ..`
-* `make`
-then head down to the *"running the program"* section
+
+by default the script updates installs and builds however you can pass optional parameters to disable options like so
+* `./install.sh -ni`
+* `-n` disables apt update/ apt upgrade
+* `-i` disables downloading and reinstalling bcm and mqtt c libraries
+* `-b` disables building the project with cmake
+* `-r` optionally runs the program after installation.
+
+after installing it head down to the *"running the program"* section
 
 # Manual
 *If you don't want to run random scripts (understandable) you can follow all the steps the install script takes manually*
