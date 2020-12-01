@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../GatewayRPI.h"
+#include "../monitoring.h"
 
 namespace typ{
 enum Type: unsigned char {
@@ -21,5 +21,4 @@ struct Message {
 	//unsigned padding : 4; // TODO pad the rest of the byte with info?
 };
 
-void initLoRa();
-void closeLoRa();
+void initSockets();

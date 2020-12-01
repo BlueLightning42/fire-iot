@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../GatewayRPI.h"
+#include "../monitoring.h"
 #include "Communication.h"
 /*
 stores device id. 

@@ -90,8 +90,8 @@ fi
 
 
 if [[ $run_after == 1 ]]; then
-	cd GatewayRPI
-	sudo ./GatewayRPI
+	cd alarm_monitoring
+	sudo ./alarm_monitoring
 fi
 
 exit 0

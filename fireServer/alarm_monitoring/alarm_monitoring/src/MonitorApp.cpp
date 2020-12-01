@@ -1,4 +1,4 @@
-#include "../headers/Gateway.h"
+#include "../headers/MonitorApp.h"
 
 // the main logic of the program. 
 
@@ -45,12 +45,12 @@ void setup_CTRLC() {
 #endif
 
 // the follwing is simply setting up and cleaning up the program state
-Gateway::Gateway(): message_recived(false), MQTT_connected(false) {
+Monitor::Monitor(): message_recived(false), MQTT_connected(false) {
 	setup_CTRLC();
 	openLogger(); // HAS to be opened before any logging can be done otherwise will crash on file write
 	readConfig(); // Store some configurable values. (can be changed by users)
 	tracked_devices = loadDevices(); // gets a sorted vector of all the id's of stored devices.
-	initLoRa();
+	initSockets();
 	makeMessageThread();
 	auto now = std::chrono::steady_clock::now();
 	last_files_updated = now;
@@ -58,21 +58,20 @@ Gateway::Gateway(): message_recived(false), MQTT_connected(false) {
 	initMQTT();
 	mainLoop();
 }
-Gateway::~Gateway() {
+Monitor::~Monitor() {
 	// storeDevices(tracked_devices); // store last state of devices.
-	closeLoRa();
 	closeMQTT();
 	closeLogger(); // Good manners to close logging resources...the operating system probably can if its shutoff but its good manners all the same.
 }
 
-inline void Gateway::sendAlert(const std::string& msg) {
+inline void Monitor::sendAlert(const std::string& msg) {
 	// makes it easier to replace MQTT by swapping out this part.
 	send_MQTT_message(msg);
 }
 
 
 
-void Gateway::mainLoop() {
+void Monitor::mainLoop() {
 	/* Endless loop for continous program.
 	 * check for new messages.
 	 * if messages recived update all the devices.
@@ -92,7 +91,7 @@ void Gateway::mainLoop() {
 	}
 }
 
-void Gateway::periodicReset() {
+void Monitor::periodicReset() {
 	// every minute or so check if files have changed.
 	using namespace std::chrono;
 	namespace fs = std::filesystem;
@@ -120,7 +119,7 @@ void Gateway::periodicReset() {
 		openLogger();
 	}
 }
-void Gateway::updateTrackedDevices() {
+void Monitor::updateTrackedDevices() {
 	/* Itterate over all recived messages.
 	 * If the message is a heartbeat update its last_communication so it doesn't get stale and 
 	 * If the message is a Alarm start a countdown/ check the current countdown for sending a alarm message
@@ -194,7 +193,7 @@ void Gateway::updateTrackedDevices() {
 	messages.clear();
 }
 
-void Gateway::checkForTimeouts() {
+void Monitor::checkForTimeouts() {
 	/* Itterate over all tracked devices and check to see if thire time_passed 
 	 * is greater than the defined timeout time in timeout_no_communication
 	 * if it has timed out then prepare a alert message and send it to send_message
