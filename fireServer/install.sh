@@ -38,14 +38,14 @@ if [[ $no_install == 1 ]]; then
 	mkdir build -p
 	cd build
 
-	{ echo -e "\e[36m\e[4m >Installing bcm2835< \e[0m"; } 2> /dev/null
-	wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.68.tar.gz
-	tar -xzvf bcm2835-1.68.tar.gz
-	cd bcm2835-1.68/
-	./configure
-	sudo make
-	sudo make install
-	cd ..
+#	{ echo -e "\e[36m\e[4m >Installing bcm2835< \e[0m"; } 2> /dev/null
+#	wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.68.tar.gz
+#	tar -xzvf bcm2835-1.68.tar.gz
+#	cd bcm2835-1.68/
+#	./configure
+#	sudo make
+#	sudo make install
+#	cd ..
 
 	{ echo -e "\e[36m\e[4m >Installing mqtt.c< \e[0m"; } 2> /dev/null
 	git clone https://github.com/eclipse/paho.mqtt.c.git
