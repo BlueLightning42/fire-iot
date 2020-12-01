@@ -1,7 +1,7 @@
 #include "../headers/Storage.h"
-#include "../headers/Gateway.h"
+#include "../headers/MonitorApp.h"
 
-static const char* database_name = "stored_devices.db";
+static const char* database_name = "/var/lib/fireiot/stored_devices.db";
 
 std::vector<Device> loadDevices() {
 	try {
@@ -66,7 +66,7 @@ static const char* default_config_text = R"(# Config file (can be changed)
 
 # alert message 
 hostname = localhost
-ClientName = OG_Gateway
+ClientName = OG_Monitor
 username = fire
 password = iot
 topic = alert/fire
@@ -77,7 +77,7 @@ timeout_alarm_blaring = 20000
 )";
 
 // I've already added too many dependancies...adding hjson or ini or something just to make a config file that people won't touch often is too much
-void Gateway::readConfig() {
+void Monitor::readConfig() {
 	// its just a config file...overhead of this is neligible and optomizations are a waste of time...considering its only read at initialization (and file deletion/editing)
 	// tfw it may seem weird to use c++ streams for input and fmt files for output but the streams library is annoying me lately...I wish fmt handled input too
 	std::ifstream config_file(config_file_name);
@@ -113,7 +113,7 @@ void Gateway::readConfig() {
 
 		//default values
 		host_name = "localhost";
-		client_name = "OG_Gateway";
+		client_name = "OG_Monitor";
 		username = "fire";
 		password = "iot";
 		topic_name = "alert/fire";

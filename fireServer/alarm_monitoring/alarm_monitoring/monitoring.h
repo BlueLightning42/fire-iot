@@ -32,7 +32,6 @@
 #include "headers/logging.h"
 
 
-
 // communication stuff...probably some of the more complicated parts of this
 
 // TODO: decide if its simpler to use QOS1 and figure it out on the fire department end.

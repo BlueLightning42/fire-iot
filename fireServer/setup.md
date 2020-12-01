@@ -18,7 +18,7 @@ otherwise just clone it into the fire-iot folder with
 * `git clone https://github.com/BlueLightning42/fire-iot.git --recurse-submodules`
 
 navigate to the gateway folder
-* `cd gateway`
+* `cd fireServer`
 
 and run the install script
 * `./install.sh`
@@ -66,7 +66,7 @@ navigate to the folder you plan to download/build the gateway (for example /Fire
 * `git clone https://github.com/BlueLightning42/fire-iot.git --recurse-submodules .`
 
 then for the gateway create a build directory
-* `cd /gateway/GatewayRPI`
+* `cd /fireServer/alarm_monitoring`
 * `mkdir build`
 * `cd build`
 
@@ -77,7 +77,7 @@ run cmake and build
 # Running the program
 Make sure you are in the correct directory (GatewayRPI/build)
 now all you have to do is run the program. - __I'm not sure yet if it can be run without root so for now__
-* `sudo GatewayRPI/GatewayRPI`
+* `sudo alarm_monitoring/alarm_monitoring`
 
 ## TODO WRITE all troubleshooting. and write steps for setting up the apache server/gateway form
 

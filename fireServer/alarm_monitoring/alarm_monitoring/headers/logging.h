@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../GatewayRPI.h"
+#include "../monitoring.h"
+
+// this file is just for pretty printing logs. 
 
 namespace logging {
 enum error {
@@ -40,9 +42,9 @@ void log(logging::error err, Str statement) {
 	auto now = system_clock::to_time_t(system_clock::now());
 	fmt::print(fg(fmt::color::dim_gray), "[{:%Y-%m-%d %H:%M:%S}]> ", fmt::localtime(now));
 
-	if ( err == logging::info ) { //only for console?
+	if ( err == logging::info ) { //only for console? or both it and file? 
 		fmt::print(fg(fmt::color::dim_gray), statement);
-	} else if ( err == logging::warn ) {
+	} else if ( err == logging::warn ) { // Something that the user should be aware about
 		fmt::print(fg(fmt::color::yellow), statement);
 	} else if ( err == logging::critical ) { //an error that could crash the program.
 		fmt::print(fg(fmt::color::crimson) | fmt::emphasis::bold, statement);

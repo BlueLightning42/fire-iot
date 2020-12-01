@@ -3,13 +3,13 @@
 
 cmake_minimum_required (VERSION 3.8)
 
-project ("GatewayRPI" 
+project ("alarm_monitoring" 
 				VERSION 0.1 
-				DESCRIPTION "Gateway for Fire alarm IOT project")
+				DESCRIPTION "Long running application to be used as the logic behind the alarm monitoring software. fireiot project for capstone 2020")
 
 # please give me c++17 ...
 set(CMAKE_CXX_STANDARD 17) 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Include sub-projects.
-add_subdirectory ("GatewayRPI")
+add_subdirectory ("alarm_monitoring")

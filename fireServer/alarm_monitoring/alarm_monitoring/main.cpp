@@ -1,9 +1,9 @@
-﻿#include "headers/Gateway.h"
+﻿#include "headers/MonitorApp.h"
 
 // Example program connecting to the gateway library with default options.
 
 int main(){
-	Gateway app;
+	Monitor app;
 	return 0;
 }
 
@@ -27,7 +27,7 @@ Storage.h
 
 Communication.h
 - has message info
-- Will have LoRa interface seperated into LoRa_communicaiton.cpp
+- has a socket interface to recive packets in packet_communication
 - and MQTT seperated into MQTT_communication.cpp.
 - exposes the functions used to both recive messages and send them.
 

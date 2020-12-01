@@ -1,10 +1,10 @@
 #include "../headers/Communication.h"
-#include "../headers/Gateway.h"
+#include "../headers/MonitorApp.h"
 
 // Example (heavily) edited from https://github.com/eclipse/paho.mqtt.cpp/blob/master/src/samples/async_publish_time.cpp
 
-// structure setup like this/split between functions so its not baked into the gateway and can be painlessly removed...
-void Gateway::initMQTT(){
+// structure setup like this/split between functions so its not baked into the Monitor and can be painlessly removed...
+void Monitor::initMQTT(){
 	using namespace std::chrono;
 
 	// How many messages to buffer while off-line
@@ -35,7 +35,7 @@ void Gateway::initMQTT(){
 		MQTT_connected = false;
 	});
 	
-	auto last_will_text = fmt::format("Pi Gateway: '{}'' Disconnected", this->client_name);
+	auto last_will_text = fmt::format("Pi Monitor: '{}'' Disconnected", this->client_name);
 	auto will_msg = mqtt::message(topic_name, last_will_text, 1, true);
 	auto connOpts = mqtt::connect_options_builder()
 						.will(will_msg)
@@ -55,7 +55,7 @@ void Gateway::initMQTT(){
 	}
 }
 
-void Gateway::closeMQTT(){
+void Monitor::closeMQTT(){
 	try{
 		log(logging::info, "Attempting to disconnect from mqtt broker @ {}", host_name);
 		cli->disconnect()->wait();
@@ -64,7 +64,7 @@ void Gateway::closeMQTT(){
 	}
 }
 
-void Gateway::send_MQTT_message(const std::string& msg) {
+void Monitor::send_MQTT_message(const std::string& msg) {
 	if( MQTT_connected == false ){
 		// if not connected already try to connect again.
 		initMQTT();

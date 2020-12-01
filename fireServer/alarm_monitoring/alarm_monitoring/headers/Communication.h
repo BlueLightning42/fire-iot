@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../GatewayRPI.h"
+#include "../monitoring.h"
 
 namespace typ{
 enum Type: unsigned char {
@@ -12,7 +12,7 @@ enum Type: unsigned char {
 };
 }
 /*
-format of the full packet recived through LoRa
+format of the full packet recived through Who knows at this point.
 */
 struct Message {
 	uint16_t dest; // id of the desired gateway?
@@ -21,5 +21,4 @@ struct Message {
 	//unsigned padding : 4; // TODO pad the rest of the byte with info?
 };
 
-void initLoRa();
-void closeLoRa();
+void initSockets();
