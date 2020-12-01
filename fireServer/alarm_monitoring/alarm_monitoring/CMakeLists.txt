@@ -1,5 +1,6 @@
 ﻿# First attempt at writing my own cmakelists. potentially written badly
 
+# names are still set to gateway related terms because this was originally going be on every gateway instead of as a server for the TTN network.
 cmake_minimum_required (VERSION 3.13)
 
 if(UNIX AND NOT APPLE)

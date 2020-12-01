@@ -12,7 +12,7 @@ enum Type: unsigned char {
 };
 }
 /*
-format of the full packet recived through LoRa
+format of the full packet recived through Who knows at this point.
 */
 struct Message {
 	uint16_t dest; // id of the desired gateway?

@@ -1,12 +1,12 @@
-[submodule "gateway/GatewayRPI/GatewayRPI/lib/fmt"]
-	path = gateway/GatewayRPI/GatewayRPI/lib/fmt
+[submodule "fireServer/alarm_monitoring/alarm_monitoring/lib/fmt"]
+	path = fireServer/alarm_monitoring/alarm_monitoring/lib/fmt
 	url = https://github.com/fmtlib/fmt.git
-[submodule "gateway/GatewayRPI/GatewayRPI/lib/SQLite"]
-	path = gateway/GatewayRPI/GatewayRPI/lib/SQLite
+[submodule "fireServer/alarm_monitoring/alarm_monitoring/lib/SQLite"]
+	path = fireServer/alarm_monitoring/alarm_monitoring/lib/SQLite
 	url = https://github.com/SRombauts/SQLiteCpp.git
-[submodule "gateway/GatewayRPI/GatewayRPI/lib/MQTT_CPP"]
-	path = gateway/GatewayRPI/GatewayRPI/lib/MQTT_CPP
+[submodule "fireServer/alarm_monitoring/alarm_monitoring/lib/MQTT_CPP"]
+	path = fireServer/alarm_monitoring/alarm_monitoring/lib/MQTT_CPP
 	url = https://github.com/eclipse/paho.mqtt.cpp.git
-[submodule "gateway/GatewayRPI/GatewayRPI/lib/RadioHead_fork"]
-	path = gateway/GatewayRPI/GatewayRPI/lib/RadioHead_fork
+[submodule "fireServer/alarm_monitoring/alarm_monitoring/lib/RadioHead_fork"]
+	path = fireServer/alarm_monitoring/alarm_monitoring/lib/RadioHead_fork
 	url = https://github.com/hallard/RadioHead.git

@@ -1,7 +1,7 @@
 #include "../headers/Storage.h"
 #include "../headers/Gateway.h"
 
-static const char* database_name = "stored_devices.db";
+static const char* database_name = "/var/lib/fireiot/stored_devices.db";
 
 std::vector<Device> loadDevices() {
 	try {

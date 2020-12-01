@@ -3,6 +3,7 @@ no_build=1
 no_update=1
 no_install=1
 run_after=0
+setup_apache=1
 while getopts "bnir" OPTION; do
         case "$OPTION" in
                 b) 
@@ -17,6 +18,9 @@ while getopts "bnir" OPTION; do
                 r) 
 					echo -e "\e[32mrunning after install\e[0m"
 					run_after=1 ;;
+                a) 
+					echo -e "\e[32not setting up apache[0m"
+					setup_apache=0 ;;
         esac
 done
 
@@ -56,16 +60,33 @@ if [[ $no_install == 1 ]]; then
 	sudo rm build -r
 fi
 
-{ echo -e "\e[36m\e[4m >Creating Build folder in GatewayRPI< \e[0m"; } 2> /dev/null
-cd GatewayRPI
+if [[ $setup_apache == 1 ]]; then
+	{ echo -e "\e[36m\e[4m Setting Up apache2 \e[0m"; } 2> /dev/null
+	sudo apt install apache2 php7.3 php7.3-sqlite3 php7.3-curl # or newer
+
+	source /etc/apache2/envvars
+
+	cd apache_files
+	sudo cp gateway.css single_page.php /var/www/html/
+	echo "DirectoryIndex single_page.php" | sudo tee /var/www/html/.htaccess 1>/dev/null
+	sudo mkdir /var/lib/fireiot
+	sudo chown www-data:www-data /var/lib/fireiot # make sure php can acess the database folder.
+	cd ..
+fi
+
+
+{ echo -e "\e[36m\e[4m >Creating Build folder in alarm_monitoring< \e[0m"; } 2> /dev/null
+cd alarm_monitoring
 mkdir build -p
 
 if [[ $no_build == 1 ]]; then
     cd build
     cmake ..
     make
-    { echo -e "\e[36m\e[4m >navigate to GatewayRPI/build and run the program with 'sudo GatewayRPI/GatewayRPI' \e[0m"; } 2> /dev/null
+    { echo -e "\e[36m\e[4m >navigate to alarm_monitoring/build and run the program with 'sudo alarm_monitoring/alarm_monitoring' \e[0m"; } 2> /dev/null
 fi
+
+
 
 
 if [[ $run_after == 1 ]]; then
