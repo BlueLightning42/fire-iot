@@ -65,7 +65,7 @@ std::string prepareAlert(uint16_t id, typ::Type alert_type) {
 static const char* default_config_text = R"(# Config file (can be changed)
 
 # alert message 
-hostname = localhost
+hostname = localhost:1883
 ClientName = OG_Monitor
 username = fire
 password = iot

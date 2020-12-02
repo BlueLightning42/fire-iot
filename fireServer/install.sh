@@ -66,12 +66,10 @@ if [[ $setup_apache == 1 ]]; then
 
 	source /etc/apache2/envvars
 
-	cd apache_files
-	sudo cp gateway.css single_page.php /var/www/html/
+	sudo cp -a ./apache_files/. /var/www/html/
 	echo "DirectoryIndex single_page.php" | sudo tee /var/www/html/.htaccess 1>/dev/null
-	sudo mkdir /var/lib/fireiot
+	sudo mkdir /var/lib/fireiot -p
 	sudo chown www-data:www-data /var/lib/fireiot # make sure php can acess the database folder.
-	cd ..
 fi
 
 
