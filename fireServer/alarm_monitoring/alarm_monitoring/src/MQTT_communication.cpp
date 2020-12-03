@@ -62,6 +62,13 @@ void Monitor::closeMQTT(){
 	}catch (const mqtt::exception& exc) {
 		log(logging::critical, "{}", exc.what());
 	}
+	try {
+		log(logging::info, "Attempting to disconnect from ttn");
+		ttn_sub->disconnect()->wait();
+	}
+	catch (const mqtt::exception& exc) {
+		log(logging::critical, "{}", exc.what());
+	}
 }
 
 void Monitor::send_MQTT_message(const std::string& msg) {

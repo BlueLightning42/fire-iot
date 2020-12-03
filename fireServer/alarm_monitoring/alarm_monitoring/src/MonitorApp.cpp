@@ -45,12 +45,11 @@ void setup_CTRLC() {
 #endif
 
 // the follwing is simply setting up and cleaning up the program state
-Monitor::Monitor(): message_recived(false), MQTT_connected(false) {
+Monitor::Monitor(): MQTT_connected(false) {
 	setup_CTRLC();
 	openLogger(); // HAS to be opened before any logging can be done otherwise will crash on file write
 	readConfig(); // Store some configurable values. (can be changed by users)
 	tracked_devices = loadDevices(); // gets a sorted vector of all the id's of stored devices.
-	initSockets();
 	makeMessageThread();
 	auto now = std::chrono::steady_clock::now();
 	last_files_updated = now;
@@ -132,58 +131,53 @@ void Monitor::updateTrackedDevices() {
 	using namespace std::chrono;
 	auto now = steady_clock::now();
 	for ( const auto& message : messages ) {
+		auto tracked = std::find(tracked_devices.begin(), tracked_devices.end(), message.name);
+		if (tracked == tracked_devices.end()) {
+			switch ( message.type ) {
+		 		case typ::heartbeat: log(logging::warn, "Heartbeat recived from unknown device with name: '{}'", message.name);break;
+		 		case typ::alarm: log(logging::critical, "Alarm message recived from unknown device with name: '{}'!", message.name);break;
+		 		case typ::error:
+		 		default: log(logging::warn, "unknown message/error [{}] recived from unknown device with name '{}'", message.type, message.name);break;
+		 	}
+		 	continue;
+		}
+		// tracked device found
 		switch ( message.type ) {
 		 case typ::heartbeat:{
 			 /* Retrive the tracked device associated with the id in the message
-			  * Lower bound can be used because the tracked_devices vector is sorted.
 			  * Update the tracked communication time with the current time.
-			 */
-			auto to_update = std::lower_bound(tracked_devices.begin(), tracked_devices.end(), message.id);
-			if (to_update == tracked_devices.end()) {
-				log(logging::warn, "heartbeat recived from unknown device with id: {}", message.id);
-			}else if ( to_update->id == message.id ) {
-				log(logging::info, "Recived Ok signal from {}", message.id);
-				to_update->last_communication = now;
-				to_update->first_detection = steady_clock::time_point::max();
-			} else {
-				log(logging::warn, "heartbeat recived from unknown device with id: {}", message.id);
-			}
+			  */
+			log(logging::info, "Recived Ok signal from '{}'", message.name);
+			tracked->last_communication = now;
+			tracked->first_detection = steady_clock::time_point::max();
 			break;
 		 }
 		 case typ::alarm: {
 			 /* Retrive the tracked device associated with the id in the message
-			  * Lower bound can be used because the tracked_devices vector is sorted.
 			  * if it is not being tracked (time_point::max() is used as a sentinal if its not already tracked.)
 			  * then set the first detection to now.
 			  * if the current alarm has been going on longer than the timout time then send a alert.
 			 */
-			auto dev = std::lower_bound(tracked_devices.begin(), tracked_devices.end(), message.id);
-			if (dev == tracked_devices.end()) {
-				log(logging::critical, "alarm message recived from unknown device with id: {}", message.id);
-			}else if (dev->id == message.id) {
-				if ( dev->first_detection == steady_clock::time_point::max() ) {
-					// if first_detection is at sentinal value set it to now/ start counting down.
-					log(logging::warn, "alarm started going off with id:{}", message.id);
-					dev->first_detection = now;
-				}
-				if ( now - dev->first_detection > timeout_alarm_blaring ) {
-					auto fire_alert = prepareAlert(message.id, message.type);
-					this->sendAlert(fire_alert);
-					// send repeated every timout
-					// dev->first_detection = now;
-					// send once unstil its ben set to heartbeat and back.
-					dev->first_detection = steady_clock::time_point::max() - milliseconds{ 1 };
-				}
-				// make timout time equal to alarm time to make sure the ->alarm recived ->no communicaiton case happens much lower than the 3 minutes.
-				dev->last_communication = now - timeout_alarm_blaring + timeout_no_communication;
-			} else {
-				log(logging::critical, "alarm message recived from unknown device with id: {}", message.id);
+		 	if ( tracked->first_detection == steady_clock::time_point::max() ) {
+				// if first_detection is at sentinal value set it to now/ start counting down.
+				log(logging::warn, "alarm started going off with name: '{}'", message.name);
+				tracked->first_detection = now;
 			}
-			 break;
+			if ( now - tracked->first_detection > timeout_alarm_blaring ) {
+				auto fire_alert = prepareAlert(tracked->id, message.type);
+				this->sendAlert(fire_alert);
+				// send repeated every timout
+				// dev->first_detection = now;
+				// send once unstil its ben set to heartbeat and back.
+				tracked->first_detection = steady_clock::time_point::max() - milliseconds{ 1 };
+			}
+			// make timout time equal to alarm time to make sure the ->alarm recived ->no communicaiton case happens much lower than the 3 minutes.
+			tracked->last_communication = now - timeout_alarm_blaring + timeout_no_communication;
+			break;
 		 }
-		 case typ::error:
-		 default:{ // all error types are sent with thire error id...need to extend it for any error code added
-			auto fire_alert = prepareAlert(message.id, message.type);
+		 case typ::error: // all error types are sent with their error id...need to extend it for any error code added
+		 default:{
+			auto fire_alert = prepareAlert(tracked->id, message.type);
 			this->sendAlert(fire_alert);
 			break;
 		 }

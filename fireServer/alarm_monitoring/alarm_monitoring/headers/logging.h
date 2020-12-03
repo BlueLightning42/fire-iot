@@ -2,8 +2,10 @@
 
 #include "../monitoring.h"
 
-// this file is just for pretty printing logs. 
-
+// This file is just for pretty printing logs to standard output and a file...probably full of horrible hacks its just to make debugging easier for me.
+// should probably be wrapped in a class but I don't want to pass a logging object around to every single function that might print something
+// and having a global object that still has to have a templated function/now its a templated method
+ 
 namespace logging {
 enum error {
 	info,
@@ -11,6 +13,7 @@ enum error {
 	critical // potential cause of a crash
 };
 extern std::FILE* outFile; //external linkage cause of the stupid LNK4006
+static std::mutex log_mut;
 }
 
 
@@ -19,6 +22,9 @@ extern std::FILE* outFile; //external linkage cause of the stupid LNK4006
 template<typename Str, typename ...Args>
 void log(logging::error err, Str format, const Args& ...args) {
 	using namespace std::chrono;
+
+	auto lock = std::unique_lock<std::mutex>(logging::log_mut); // I get the multi threading "just throw a lock on it" concept isn't the best for performance but logs are infrequent and I don't really want to focus on this when I need to fix the actual application.
+
 	auto now = system_clock::to_time_t(system_clock::now());
 	// Adding a timestamp to the start of a log
 	fmt::print(fg(fmt::color::dim_gray), "[{:%Y-%m-%d %H:%M:%S}]> ", fmt::localtime(now));
@@ -34,11 +40,15 @@ void log(logging::error err, Str format, const Args& ...args) {
 
 	std::string temp = fmt::format("[{:%Y-%m-%d %H:%M:%S}]> {}\n", fmt::localtime(now), format);
 	fmt::print(logging::outFile, temp.c_str(), args...);
+
+	lock.unlock();
 }
 // similar function when theres no arguments to format
 template<typename Str>
 void log(logging::error err, Str statement) {
 	using namespace std::chrono;
+
+	auto lock = std::unique_lock<std::mutex>(logging::log_mut);
 	auto now = system_clock::to_time_t(system_clock::now());
 	fmt::print(fg(fmt::color::dim_gray), "[{:%Y-%m-%d %H:%M:%S}]> ", fmt::localtime(now));
 
@@ -52,6 +62,8 @@ void log(logging::error err, Str statement) {
 	fmt::print("\n");
 
 	fmt::print(logging::outFile, "[{:%Y-%m-%d %H:%M:%S}]> {}\n", fmt::localtime(now), statement);
+
+	lock.unlock();
 }
 void openLogger();
 void closeLogger();

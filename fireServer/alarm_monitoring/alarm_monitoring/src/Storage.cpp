@@ -6,21 +6,27 @@ static const char* database_name = "/var/lib/fireiot/stored_devices.db";
 std::vector<Device> loadDevices() {
 	try {
 		SQLite::Database db(database_name, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE | SQLite::OPEN_FULLMUTEX, 200);
-		db.exec(R"(CREATE TABLE IF NOT EXISTS StoredDevices (
+		int rc = db.exec(R"(CREATE TABLE IF NOT EXISTS StoredDevices (
 			id int PRIMARY KEY,
+			dev_name  VARCHAR(25),
 			address  VARCHAR(25) NOT NULL,
 			postal_code VARCHAR(20),
 			device_type VARCHAR(20)
 		) )");
-		//db.exec(R"(INSERT INTO StoredDevices VALUES (0, " -1 null drive", "X0X123", "microwave") )");
+		log(logging::info, "RC is {}", rc);
+		//db.exec(R"(INSERT INTO StoredDevices VALUES (0, "NOT_A_DEVICE",  "-1 null drive", "X0X123", "microwave") )");
 		std::vector<Device> returned_devices;
-		SQLite::Statement query(db, "SELECT id FROM StoredDevices");
+		SQLite::Statement query(db, "SELECT id,devName FROM StoredDevices");
 		while (query.executeStep()){
 			int id = query.getColumn(0);
-			returned_devices.emplace_back((uint16_t)id);
+			std::string dev_name = query.getColumn(1);
+			returned_devices.emplace_back((uint16_t)id, dev_name);
 		}
-		if (returned_devices.size() == 0)
-			log(logging::warn, "Read database and found 0 devices.");
+		if (returned_devices.size() == 0){
+			log(logging::warn, "Read database and found 0 devices...adding dummy null device");
+			db.exec(R"(INSERT INTO StoredDevices VALUES (0, "NOT_A_DEVICE",  "-1 null drive", "X0X123", "microwave") )");
+		}
+		
 		else
 			log(logging::info, "Read database and returned {} tracked devices.", returned_devices.size());
 		return returned_devices;
@@ -71,17 +77,23 @@ username = fire
 password = iot
 topic = alert/fire
 
+# ttn values for mqtt
+ttn_host = us-west.thethings.network:1883
+ttnClientName = OG_Monitor
+AppID = fire-detection-iot
+AppKey = ttn-account-v2.sXLemq1_Q99MjfKoYSc2BpAUTMDuVdgnRYcvRk8PFAs
+
 # Timeout values are in milliseconds
 timeout_no_communication = 180000
 timeout_alarm_blaring = 20000
 )";
 
 // I've already added too many dependancies...adding hjson or ini or something just to make a config file that people won't touch often is too much
-void Monitor::readConfig() {
+// although the more settings I add the closer I am to replacing it
+void Monitor::readConfig(int try_again) {
 	// its just a config file...overhead of this is neligible and optomizations are a waste of time...considering its only read at initialization (and file deletion/editing)
 	// tfw it may seem weird to use c++ streams for input and fmt files for output but the streams library is annoying me lately...I wish fmt handled input too
 	std::ifstream config_file(config_file_name);
-	
 	if ( config_file.is_open() ) {
 		std::string line;
 		while ( std::getline(config_file, line) ) {
@@ -92,14 +104,21 @@ void Monitor::readConfig() {
 			auto name = line.substr(0, delimiterPos);
 			auto value = line.substr(delimiterPos + 1);
 			
-			if ( name == "hostname" ) host_name = value;
-			else if ( name == "ClientName" ) client_name = value;
-			else if ( name == "username" ) username = value;
-			else if ( name == "password" ) password = value;
-			else if ( name == "topic" ) topic_name = value;
-			else if ( name == "timeout_no_communication" ) timeout_no_communication = std::chrono::milliseconds(std::stoi(value));
-			else if ( name == "timeout_alarm_blaring" ) timeout_alarm_blaring = std::chrono::milliseconds(std::stoi(value));
+			// could be prettyfied with Pattern Matching if that decides to work its way into c++23 but w/e...if I cared more I'd swap to a dedicated library.
+			if      ( name == "hostname" ) 	                 host_name = value;
+			else if ( name == "ClientName" )                 client_name = value;
+			else if ( name == "username" )                   username = value;
+			else if ( name == "password" )                   password = value;
+			else if ( name == "topic" )                      topic_name = value;
+			else if ( name == "timeout_no_communication" )   timeout_no_communication = std::chrono::milliseconds(std::stoi(value));
+			else if ( name == "timeout_alarm_blaring" )      timeout_alarm_blaring = std::chrono::milliseconds(std::stoi(value));
+			else if ( name == "ttn_host" )                   ttn_host = value;
+			else if ( name == "ttnClientName" )              ttnClientName = value;
+			else if ( name == "AppID" )                      AppID = value;
+			else if ( name == "AppKey" )                     AppKey = value;
+
 		}
+		try_again+=10;
 	} else {
 		log(logging::warn, "Couldn't open config file.");
 		
@@ -111,17 +130,10 @@ void Monitor::readConfig() {
 		out.print(default_config_text);
 		log(logging::info, "Replacing config with defaults");
 
-		//default values
-		host_name = "localhost";
-		client_name = "OG_Monitor";
-		username = "fire";
-		password = "iot";
-		topic_name = "alert/fire";
-		using namespace std::chrono;
-		timeout_no_communication = 3min;
-		timeout_alarm_blaring = 20s;
+		//default values are placed-rerun config once more and it will try to read them after remaking them.
+		try_again++;
 	}
-
+	if(try_again == 1) readConfig(try_again);
 	auto file = std::filesystem::path(config_file_name);
 	last_config_update = std::filesystem::last_write_time(file);
 }

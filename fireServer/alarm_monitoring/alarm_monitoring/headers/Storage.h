@@ -8,16 +8,20 @@ also include state of device? type of device?
 */
 struct Device {
 	uint16_t id;
+	std::string name;
 
 	std::chrono::steady_clock::time_point last_communication;
 	std::chrono::steady_clock::time_point first_detection;
 	const bool operator<(const uint16_t& _id) const {
 		return this->id < _id;
 	}
-	Device(): id(0),
+	const bool operator==(const std::string _name) const {
+		return this->name.compare(_name) != 0;
+	}
+	Device(): id(0), name(""),
 		last_communication(std::chrono::steady_clock::time_point::max()),
 		first_detection(std::chrono::steady_clock::time_point::max()) {}
-	Device(uint16_t _id): id(_id),
+	Device(uint16_t _id, std::string _name): id(_id), name(_name),
 		last_communication(std::chrono::steady_clock::time_point::max()),
 		first_detection(std::chrono::steady_clock::time_point::max()) {}
 };

@@ -37,6 +37,7 @@ __pycache__/
 
 # custom build directory
 build/
+debug/
 
 # build enabling mqtt
 MQTT_CPP/paho.mqtt.c/
