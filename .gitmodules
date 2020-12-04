@@ -10,3 +10,6 @@
 [submodule "fireServer/alarm_monitoring/alarm_monitoring/lib/RadioHead_fork"]
 	path = fireServer/alarm_monitoring/alarm_monitoring/lib/RadioHead_fork
 	url = https://github.com/hallard/RadioHead.git
+[submodule "fireServer/alarm_monitoring/alarm_monitoring/lib/rapidjson"]
+	path = fireServer/alarm_monitoring/alarm_monitoring/lib/rapidjson
+	url = https://github.com/Tencent/rapidjson.git

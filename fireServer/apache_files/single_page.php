@@ -63,6 +63,7 @@ if( isset($_POST["inputCode"]) ){
                       id="inputCode"
                       name="inputCode"
                       placeholder="Device Code"
+                      maxlength="25"
                       required>
               <input  class="item"
                       type="text"
@@ -70,6 +71,7 @@ if( isset($_POST["inputCode"]) ){
                       id="inputCountry"
                       placeholder="Country"
                       value="Canada"
+                      maxlength="25"
                       required>
               <input  class="item"
                       type="text"
@@ -77,24 +79,28 @@ if( isset($_POST["inputCode"]) ){
                       id="inputProvice"
                       value="ON"
                       placeholder="Provice"
+                      maxlength="25"
                       required>
               <input  class="item"
                       type="text"
                       name="inputZip"
                       id="inputZip"
                       placeholder="zip"
+                      maxlength="25"
                       required>
               <input  class="item"
                       type="text"
                       name="inputCity"
                       id="inputCity"
                       placeholder="City"
+                      maxlength="25"
                       required>
               <input  class="item"
                       type="text"
                       name="inputStreet"
                       id="inputStreet"
                       placeholder="Street/building/unit"
+                      maxlength="25"
                       required>
               <input  class="item"
                       type="submit" value="Submit">

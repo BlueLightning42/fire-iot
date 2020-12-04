@@ -6,17 +6,16 @@ static const char* database_name = "/var/lib/fireiot/stored_devices.db";
 std::vector<Device> loadDevices() {
 	try {
 		SQLite::Database db(database_name, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE | SQLite::OPEN_FULLMUTEX, 200);
-		int rc = db.exec(R"(CREATE TABLE IF NOT EXISTS StoredDevices (
+		db.exec(R"(CREATE TABLE IF NOT EXISTS StoredDevices (
 			id int PRIMARY KEY,
-			dev_name  VARCHAR(25),
+			dev_name  VARCHAR(25) UNIQUE,
 			address  VARCHAR(25) NOT NULL,
 			postal_code VARCHAR(20),
 			device_type VARCHAR(20)
 		) )");
-		log(logging::info, "RC is {}", rc);
 		//db.exec(R"(INSERT INTO StoredDevices VALUES (0, "NOT_A_DEVICE",  "-1 null drive", "X0X123", "microwave") )");
 		std::vector<Device> returned_devices;
-		SQLite::Statement query(db, "SELECT id,devName FROM StoredDevices");
+		SQLite::Statement query(db, "SELECT id,dev_name FROM StoredDevices");
 		while (query.executeStep()){
 			int id = query.getColumn(0);
 			std::string dev_name = query.getColumn(1);
@@ -41,6 +40,8 @@ std::string prepareAlert(uint16_t id, typ::Type alert_type) {
 	switch (alert_type) {
 	 case typ::alarm: alert_name = "Alarm is On for too long"; break;
 	 case typ::no_communication: alert_name = "No communication recived for some time"; break;
+	 case typ::no_communication_and_fire: alert_name = "No communication recived for some time and last message sent was alarm!"; break;
+	 case typ::error: alert_name = "General Error recived"; break;
 	 default: log(logging::critical, "Unknown alert_type: {} passed to prepareAlert function", alert_type);
 	}
 
@@ -80,8 +81,8 @@ topic = alert/fire
 # ttn values for mqtt
 ttn_host = us-west.thethings.network:1883
 ttnClientName = OG_Monitor
-AppID = fire-detection-iot
-AppKey = ttn-account-v2.sXLemq1_Q99MjfKoYSc2BpAUTMDuVdgnRYcvRk8PFAs
+AppID = XXX-XXX-XXX
+AppKey = ttn-account-v2.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 # Timeout values are in milliseconds
 timeout_no_communication = 180000
@@ -105,7 +106,7 @@ void Monitor::readConfig(int try_again) {
 			auto value = line.substr(delimiterPos + 1);
 			
 			// could be prettyfied with Pattern Matching if that decides to work its way into c++23 but w/e...if I cared more I'd swap to a dedicated library.
-			if      ( name == "hostname" ) 	                 host_name = value;
+			if      ( name == "hostname" )                   host_name = value;
 			else if ( name == "ClientName" )                 client_name = value;
 			else if ( name == "username" )                   username = value;
 			else if ( name == "password" )                   password = value;

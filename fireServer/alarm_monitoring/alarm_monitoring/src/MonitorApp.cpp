@@ -141,6 +141,7 @@ void Monitor::updateTrackedDevices() {
 		 	}
 		 	continue;
 		}
+		fmt::print("Tracked {} {}, message from {}\n", tracked->name, tracked->id, message.name);
 		// tracked device found
 		switch ( message.type ) {
 		 case typ::heartbeat:{

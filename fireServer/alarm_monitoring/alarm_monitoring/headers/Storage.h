@@ -16,7 +16,7 @@ struct Device {
 		return this->id < _id;
 	}
 	const bool operator==(const std::string _name) const {
-		return this->name.compare(_name) != 0;
+		return !this->name.compare(_name);
 	}
 	Device(): id(0), name(""),
 		last_communication(std::chrono::steady_clock::time_point::max()),

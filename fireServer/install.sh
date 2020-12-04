@@ -69,7 +69,12 @@ if [[ $setup_apache == 1 ]]; then
 	sudo cp -a ./apache_files/. /var/www/html/
 	echo "DirectoryIndex single_page.php" | sudo tee /var/www/html/.htaccess 1>/dev/null
 	sudo mkdir /var/lib/fireiot -p
-	sudo chown www-data:www-data /var/lib/fireiot # make sure php can acess the database folder.
+	sudo addgroup fire_iot 
+	sudo adduser www-data fire_iot
+	sudo adduser pi fire_iot
+
+	sudo chown -vR :fire_iot /var/lib/fireiot # make sure php can acess the database folder along with default user
+	sudo chmod -vR g+w /var/lib/fireiot
 fi
 
 
