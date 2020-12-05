@@ -15,12 +15,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 'On');
 
 if( isset($_POST["inputCode"]) ){
-  // sudo mkdir /var/lib/fireiot
-  // sudo chown www-data:www-data /var/lib/fireiot
   $db = new SQLite3("/var/lib/fireiot/stored_devices.db");
-
-  // $db->exec("(CREATE TABLE IF NOT EXISTS StoredDevices (id int PRIMARY KEY, devName  VARCHAR(25),address  VARCHAR(25) NOT NULL,postal_code VARCHAR(20),device_type VARCHAR(20) ) )");
-  // $db->exec('INSERT INTO StoredDevices VALUES (0, " -1 null drive", "X0X123", "microwave")');
 
   $stm = $db->prepare('INSERT INTO StoredDevices(dev_name, address, postal_code, device_type) VALUES (?, ?, ?, "Smoke Alarm")');
   $stm->bindParam(1, $dev_name);

@@ -1,6 +1,6 @@
 #include "../headers/MonitorApp.h"
 
-// the main logic of the program. 
+// the main logic of the program.
 
 // the following section is just setting up Ctrl+C as a method of closing the program.
 #ifdef __linux__
@@ -13,7 +13,7 @@ namespace program{
 
 void sig_handler(int sig){
 	log(logging::warn, "Break received, exiting!"); // probably not thread safe going remove in the future but for now leaving it.
-  	program::running = false;	
+  	program::running = false;
 }
 void setup_CTRLC() {
 	signal(SIGINT, sig_handler); // Ctrl-C
@@ -68,7 +68,9 @@ inline void Monitor::sendAlert(const std::string& msg) {
 	send_MQTT_message(msg);
 }
 
-
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+//                        Important application Logic below here
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
 void Monitor::mainLoop() {
 	/* Endless loop for continous program.
@@ -76,10 +78,7 @@ void Monitor::mainLoop() {
 	 * if messages recived update all the devices.
 	 * then check for any timeouts
 	 * repeat.
-	 * TODO: as errors can appear in long running programs add a long running timer
-	 *		 and reset data if its been changed? ie reset config data and reset tracked_devices
-	 *       if the database or config file have been changed
-	*/
+	 */
 	while ( program::running ) {
 		pollMessages();
 		if ( !messages.empty() ) {
@@ -120,9 +119,9 @@ void Monitor::periodicReset() {
 }
 void Monitor::updateTrackedDevices() {
 	/* Itterate over all recived messages.
-	 * If the message is a heartbeat update its last_communication so it doesn't get stale and 
+	 * If the message is a heartbeat update its last_communication so it doesn't get stale and
 	 * If the message is a Alarm start a countdown/ check the current countdown for sending a alarm message
-	*/
+	 */
 	if (tracked_devices.empty()) {
 		log(logging::critical, "empty tracked devices");
 		messages.clear();
@@ -158,7 +157,7 @@ void Monitor::updateTrackedDevices() {
 			  * if it is not being tracked (time_point::max() is used as a sentinal if its not already tracked.)
 			  * then set the first detection to now.
 			  * if the current alarm has been going on longer than the timout time then send a alert.
-			 */
+			  */
 		 	if ( tracked->first_detection == steady_clock::time_point::max() ) {
 				// if first_detection is at sentinal value set it to now/ start counting down.
 				log(logging::warn, "alarm started going off with name: '{}'", message.name);
@@ -169,7 +168,7 @@ void Monitor::updateTrackedDevices() {
 				this->sendAlert(fire_alert);
 				// send repeated every timout
 				// dev->first_detection = now;
-				// send once unstil its ben set to heartbeat and back.
+				// send once unstil its been set to heartbeat and back.
 				tracked->first_detection = steady_clock::time_point::max() - milliseconds{ 1 };
 			}
 			// make timout time equal to alarm time to make sure the ->alarm recived ->no communicaiton case happens much lower than the 3 minutes.
@@ -189,10 +188,11 @@ void Monitor::updateTrackedDevices() {
 }
 
 void Monitor::checkForTimeouts() {
-	/* Itterate over all tracked devices and check to see if thire time_passed 
+	/* Itterate over all tracked devices and check to see if thire time_passed
 	 * is greater than the defined timeout time in timeout_no_communication
 	 * if it has timed out then prepare a alert message and send it to send_message
-	*/
+	 * if alarm was detected and timout time has been reached
+	 */
 	using namespace std::chrono;
 	auto now = steady_clock::now();
 	constexpr auto max_time = steady_clock::time_point::max();
@@ -200,13 +200,23 @@ void Monitor::checkForTimeouts() {
 		if ( now - device.last_communication > timeout_no_communication ) {
 			std::string fire_alert;
 			if (device.first_detection != max_time) {
-				fire_alert = prepareAlert(device.id, typ::no_communication_and_fire);	
+				fire_alert = prepareAlert(device.id, typ::no_communication_and_fire);
 			}else {
 				fire_alert = prepareAlert(device.id, typ::no_communication);
 			}
 			this->sendAlert(fire_alert);
 			device.last_communication = max_time; //forces it to stop giving updates after one tick
 			device.first_detection = max_time;
+		}
+		if (device.first_detection != max_time) {
+			if ( (now - tracked->first_detection)*2 > timeout_alarm_blaring ) {
+				auto fire_alert = prepareAlert(device.id, typ::alarm);
+				this->sendAlert(fire_alert);
+				// send repeated every timout
+				// dev->first_detection = now;
+				// send once unstil its ben set to heartbeat and back. (or timout)
+				tracked->first_detection = steady_clock::time_point::max() - milliseconds{ 1 };
+			}
 		}
 	}
 }

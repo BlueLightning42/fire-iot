@@ -6,19 +6,19 @@ run_after=0
 setup_apache=1
 while getopts "bnir" OPTION; do
         case "$OPTION" in
-                b) 
+                b)
 					echo -e "\e[91mno build\e[0m"
 					no_build=0 ;;
-                n) 
+                n)
 					echo -e "\e[91mno update\e[0m"
 					no_update=0 ;;
-                i) 
+                i)
 					echo -e "\e[91mno install\e[0m"
 					no_install=0 ;;
-                r) 
+                r)
 					echo -e "\e[32mrunning after install\e[0m"
 					run_after=1 ;;
-                a) 
+                a)
 					echo -e "\e[32not setting up apache[0m"
 					setup_apache=0 ;;
         esac
@@ -69,7 +69,7 @@ if [[ $setup_apache == 1 ]]; then
 	sudo cp -a ./apache_files/. /var/www/html/
 	echo "DirectoryIndex single_page.php" | sudo tee /var/www/html/.htaccess 1>/dev/null
 	sudo mkdir /var/lib/fireiot -p
-	sudo addgroup fire_iot 
+	sudo addgroup fire_iot
 	sudo adduser www-data fire_iot
 	sudo adduser pi fire_iot
 

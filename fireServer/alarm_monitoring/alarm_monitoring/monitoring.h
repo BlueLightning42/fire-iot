@@ -1,9 +1,9 @@
 ﻿#pragma once
 
-#pragma warning( disable : 26812 26451 26444 6387 26498 26495) 
+#pragma warning( disable : 26812 26451 26444 6387 26498 26495)
 
 // standard library headers
-#include <stdint.h> //uint32_t etc 
+#include <stdint.h> //uint32_t etc
 #include <vector>
 #include <chrono>	// system_clock steady_clock
 
@@ -29,8 +29,9 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 
 // utility logging function
+// to disable all the info logs (release type warnings instead of all the verbose logs)
+// #define NO_LOG_INFO 1
 #include "headers/logging.h"
-
 
 // communication stuff...probably some of the more complicated parts of this
 
@@ -39,8 +40,7 @@
 // QOS0 = at most once.
 // QOS1 = at least once.
 // QOS2 = exactly once.
-
-
 #include <mqtt/async_client.h>
+
 #define RAPIDJSON_HAS_STDSTRING 1
 #include <rapidjson/document.h>

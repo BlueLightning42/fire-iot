@@ -3,7 +3,7 @@
 #include "../monitoring.h"
 #include "Communication.h"
 /*
-stores device id. 
+stores device id.
 also include state of device? type of device?
 */
 struct Device {
@@ -32,12 +32,6 @@ on init/restart load all devices from a small database file (sqllite3?)
 std::vector<Device> loadDevices();
 
 /*
-on shutdown store all devices into a small database file (sqllite3?)
-void storeDevices(std::vector<Device> data); not implemented because functionality changed.
-*/
-
-/*
 retrives device data and stores it in a string. (small overhead)
 */
 std::string prepareAlert(uint16_t, typ::Type);
-

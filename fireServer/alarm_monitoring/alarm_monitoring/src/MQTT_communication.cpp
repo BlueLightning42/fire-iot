@@ -34,7 +34,7 @@ void Monitor::initMQTT(){
 		log(logging::info, "Disconnected from mqtt broker: code:{}", code);
 		MQTT_connected = false;
 	});
-	
+
 	auto last_will_text = fmt::format("Pi Monitor: '{}'' Disconnected", this->client_name);
 	auto will_msg = mqtt::message(topic_name, last_will_text, 1, true);
 	auto connOpts = mqtt::connect_options_builder()
@@ -81,7 +81,7 @@ void Monitor::send_MQTT_message(const std::string& msg) {
 
 	try {
 		auto top = mqtt::topic(*cli, topic_name, QOS);
-		
+
 		top.publish(msg);
 	}
 	catch (const mqtt::exception& exc) {

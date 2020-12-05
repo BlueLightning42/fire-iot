@@ -25,7 +25,7 @@ std::vector<Device> loadDevices() {
 			log(logging::warn, "Read database and found 0 devices...adding dummy null device");
 			db.exec(R"(INSERT INTO StoredDevices VALUES (0, "NOT_A_DEVICE",  "-1 null drive", "X0X123", "microwave") )");
 		}
-		
+
 		else
 			log(logging::info, "Read database and returned {} tracked devices.", returned_devices.size());
 		return returned_devices;
@@ -69,11 +69,13 @@ std::string prepareAlert(uint16_t id, typ::Type alert_type) {
 
 // code for config file...basically a super limited version of the .ini format.
 // moved to here to group all file related stuff in the same section.
-static const char* default_config_text = R"(# Config file (can be changed)
+static const char* default_config_text = \
+R"(# Config file (can be changed)
 
-# alert message 
+# alert message
 hostname = localhost:1883
 ClientName = OG_Monitor
+# please change these from defaults after setting up
 username = fire
 password = iot
 topic = alert/fire
@@ -81,6 +83,7 @@ topic = alert/fire
 # ttn values for mqtt
 ttn_host = us-west.thethings.network:1883
 ttnClientName = OG_Monitor
+# These values can be found in TTN after creating an application
 AppID = XXX-XXX-XXX
 AppKey = ttn-account-v2.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
@@ -104,7 +107,7 @@ void Monitor::readConfig(int try_again) {
 			auto delimiterPos = line.find("=");
 			auto name = line.substr(0, delimiterPos);
 			auto value = line.substr(delimiterPos + 1);
-			
+
 			// could be prettyfied with Pattern Matching if that decides to work its way into c++23 but w/e...if I cared more I'd swap to a dedicated library.
 			if      ( name == "hostname" )                   host_name = value;
 			else if ( name == "ClientName" )                 client_name = value;
@@ -122,7 +125,7 @@ void Monitor::readConfig(int try_again) {
 		try_again+=10;
 	} else {
 		log(logging::warn, "Couldn't open config file.");
-		
+
 		namespace fs = std::filesystem;
 		auto out = fmt::output_file(config_file_name);
 		std::error_code ec;

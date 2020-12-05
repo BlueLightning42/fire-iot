@@ -4,7 +4,7 @@ namespace logging {
 std::FILE* outFile; //global variable shared with openLogger() closeLogger() and log(...) functions
 }
 void openLogger() {
-	
+
 	using namespace std::chrono;
 	auto now = system_clock::to_time_t(system_clock::now());
 
@@ -27,8 +27,6 @@ void openLogger() {
 			}
 		}
 	}
-
-
 
 #ifdef _MSC_VER
 	fopen_s(&logging::outFile, log_file_name.c_str(), "a");

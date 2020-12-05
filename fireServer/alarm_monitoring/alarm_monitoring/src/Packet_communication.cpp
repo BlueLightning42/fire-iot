@@ -1,15 +1,14 @@
 #include "../headers/Communication.h"
 #include "../headers/MonitorApp.h"
 #include "../headers/base64decode.h"
+
 const int QOS = 1;
 const int N_RETRY_ATTEMPTS = 5;
 
-/////////////////////////////////////////////////////////////////////////////
-
-// Callbacks for the success or failures of requested actions.
-// This could be used to initiate further action, but here we just log the
-// results to the console.
-
+/* Callbacks for the success or failures of requested actions.
+ * This could be used to initiate further action, but here we just log the
+ * results to the console.
+ */
 void action_listener::on_failure(const mqtt::token& tok) {
 	log(logging::warn, "{} failure", name_);
 	if (tok.get_message_id() != 0){
@@ -28,12 +27,14 @@ void action_listener::on_success(const mqtt::token& tok) {
 	}
 }
 
-// This deomonstrates manually reconnecting to the broker by calling
-// connect() again. This is a possibility for an application that keeps
-// a copy of it's original connect_options, or if the app wants to
-// reconnect with different options.
-// Another way this can be done manually, if using the same options, is
-// to just call the async_client::reconnect() method.
+/* This deomonstrates manually reconnecting to the broker by calling
+ * connect() again. This is a possibility for an application that keeps
+ * a copy of it's original connect_options, or if the app wants to
+ * reconnect with different options.
+ * Another way this can be done manually, if using the same options, is
+ * to just call the async_client::reconnect() method.
+ * for now leaving like this
+ */
 void ttn_connection_callback::reconnect() {
 	std::this_thread::sleep_for(std::chrono::milliseconds(2500));
 	try {
@@ -53,6 +54,7 @@ void ttn_connection_callback::on_failure(const mqtt::token& tok) {
 	reconnect();
 }
 
+// Successfully connected
 void ttn_connection_callback::connected(const std::string& cause) {
 	log(logging::info, "Connection with ttn success- Subscribing to topic: {}\n", "fire/raw");
 
@@ -87,21 +89,26 @@ void ttn_connection_callback::message_arrived(mqtt::const_message_ptr msg) {
 		log(logging::critical, "ttn dev_id not a string."); return;
 	}
 	std::string name = nameit->value.GetString();
-	
+
 	nameit = doc.FindMember("payload_raw");
 	if(nameit == doc.MemberEnd()){
 		log(logging::critical, "ttn payload_raw doesn't exist"); return;
 	}else if(!nameit->value.IsString()){
 		log(logging::critical, "ttn payload_raw not a string."); return;
 	}
-	typ::Type payload; //TTN sends payload packets that are base 64 encoded and the bytes are hexadeciaml. - 00 sent as AA== and 01 sent as AQ==
+	typ::Type payload;
+	/* TTN sends payload packets that are base 64 encoded and the bytes are hexadeciaml.
+	 * - 00 sent as AA== and 01 sent as AQ==
+	 * Please do not think this is how base64 strings should normally be decoded
+	 * its just something I wrote quickly to get the data...considering the top two versions are more likly to happen
+	 * and considering they should happen quite a few times its not too much of a premature optimization.
+	 * If we figure out the end point and send packets using a value like "code: 1" then I can find it in the json payload and don't have to decode it from the payload_raw
+	 */
 	if(strcmp("AA==", nameit->value.GetString()) == 0){
 		payload = typ::heartbeat;
 	}else if(strcmp("AQ==", nameit->value.GetString()) == 0){
 		payload = typ::alarm;
 	}else{
-	/*  Please do not think this is how base64 strings should normally be decoded its just something I wrote quickly to get the data...considering the top two versions are more likly to happen
-	    using thire output. If we figure out the end point and send packets using a value like "code: 1" then I can find it in the json payload and don't have to decode it from the payload_raw*/
 		std::string payload_raw = b64decode(nameit->value.GetString());
 		log(logging::info, "non heartbeat/alarm code recived with: {}", (int)payload_raw[0]);
 		if(payload_raw.size() != 1){
@@ -122,7 +129,6 @@ void ttn_connection_callback::message_arrived(mqtt::const_message_ptr msg) {
 /////////////////////////////////////////////////////////////////////////////
 
 
-// once I get Socket connection will have its own thread.
 void Monitor::makeMessageThread() {
 	using namespace std::chrono;
 	auto connOpts = mqtt::connect_options_builder()
@@ -138,7 +144,7 @@ void Monitor::makeMessageThread() {
 
 	// Start the connection.
 	// When completed, the callback will subscribe to topic.
-	
+
 	try {
 		// Note that we start the connection, but don't wait for completion.
 		// We configured to allow publishing before a successful connection.
@@ -150,11 +156,11 @@ void Monitor::makeMessageThread() {
 
 }
 
-//Monitor::std::vector<Message> recived;
+//Monitor::std::vector<Message> recived; (is the format of the recived vector)
 
 void Monitor::pollMessages() {
 	// fake message sending for testing.
-	
+
 	auto lock = std::unique_lock<std::mutex>(m);
 	if (!recived.empty()) {
 		messages = std::move(recived);
