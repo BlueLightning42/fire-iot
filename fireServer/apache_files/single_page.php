@@ -53,8 +53,6 @@ if( isset($_POST["inputCode"]) ){
     echo "<h3>submitted address: " . $address . "</h3>";
     echo "<h2>for device: " . $dev_name . "</h2>";
     echo "<p><i>You can now close this page (or register another device below)</i><p>";
-  }else{
-
   }
 }
 

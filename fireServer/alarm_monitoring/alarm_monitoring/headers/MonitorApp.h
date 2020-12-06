@@ -13,8 +13,11 @@ class Monitor {
 	~Monitor();
  private:
 	void readConfig(int try_again=0);
+	void loadDevices();
+	void refreshDevicesInPlace();
 	void sendAlert(const std::string& msg);
 	std::filesystem::file_time_type last_config_update;
+	std::filesystem::file_time_type last_database_update;
 	std::chrono::steady_clock::time_point last_files_updated; // to check for updates/reset every few minutes.
 	std::chrono::steady_clock::time_point last_logging_updated; // to reset logger every few hours.
 
@@ -22,7 +25,6 @@ class Monitor {
 	std::vector<Message> messages; // vector acting as a stack of all recived messages.
 	std::vector<Message> recived; // vector acting as a stack of all recived messages for the message thread
 	std::mutex m;
-	std::thread message_thread;
 
 	// config info.
 	std::string host_name,client_name,username,password,topic_name; // for output
@@ -45,6 +47,7 @@ class Monitor {
 
 	void pollMessages();
 	void periodicReset();
+	void checkDatabaseUpdate();
 	void updateTrackedDevices();
 	void checkForTimeouts();
 };

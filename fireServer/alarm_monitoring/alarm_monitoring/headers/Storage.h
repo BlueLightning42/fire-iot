@@ -15,6 +15,9 @@ struct Device {
 	const bool operator<(const uint16_t& _id) const {
 		return this->id < _id;
 	}
+	const bool operator<(const Device& other) const {
+		return this->id < other.id;
+	}
 	const bool operator==(const std::string _name) const {
 		return !this->name.compare(_name);
 	}
@@ -25,11 +28,6 @@ struct Device {
 		last_communication(std::chrono::steady_clock::time_point::max()),
 		first_detection(std::chrono::steady_clock::time_point::max()) {}
 };
-
-/*
-on init/restart load all devices from a small database file (sqllite3?)
-*/
-std::vector<Device> loadDevices();
 
 /*
 retrives device data and stores it in a string. (small overhead)

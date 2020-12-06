@@ -2,6 +2,8 @@
 #include "../headers/MonitorApp.h"
 
 // Example (heavily) edited from https://github.com/eclipse/paho.mqtt.cpp/blob/master/src/samples/async_publish_time.cpp
+// and from https://github.com/eclipse/paho.mqtt.cpp/blob/master/src/samples/async_subscribe.cpp
+// I'm sorry the code for the subscribing to ttn and the code for publishing to localhost are so different
 
 namespace {
 const int QOS_SEND = 1;
@@ -16,10 +18,10 @@ void inline Monitor::makeMessageSenderThread(){
 	const int MAX_BUFFERED_MESSAGES = 100;
 
 	auto createOpts = mqtt::create_options_builder()
-						  .send_while_disconnected(true, true)
-					      .max_buffered_messages(MAX_BUFFERED_MESSAGES)
-						  .delete_oldest_messages()
-						  .finalize();
+							.send_while_disconnected(true, true)
+							.max_buffered_messages(MAX_BUFFERED_MESSAGES)
+							.delete_oldest_messages()
+							.finalize();
 
 	cli = std::make_shared<mqtt::async_client>(this->host_name, this->client_name, createOpts);
 

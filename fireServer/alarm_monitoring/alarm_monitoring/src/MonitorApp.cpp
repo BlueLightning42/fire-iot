@@ -49,7 +49,7 @@ Monitor::Monitor(): MQTT_connected(false) {
 	setup_CTRLC();
 	openLogger(); // HAS to be opened before any logging can be done otherwise will crash on file write
 	readConfig(); // Store some configurable values. (can be changed by users)
-	tracked_devices = loadDevices(); // gets a sorted vector of all the id's of stored devices.
+	loadDevices(); // gets a sorted vector of all the id's of stored devices.
 	auto now = std::chrono::steady_clock::now();
 	last_files_updated = now;
 	last_logging_updated = now;
@@ -88,34 +88,7 @@ void Monitor::mainLoop() {
 	}
 }
 
-void Monitor::periodicReset() {
-	// every minute or so check if files have changed.
-	using namespace std::chrono;
-	namespace fs = std::filesystem;
-	auto now = steady_clock::now();
-	if (now - this->last_files_updated > 2min) {
-		this->last_files_updated = now;
-		if (fs::exists(config_file_name)) {
-			auto file = fs::path(config_file_name);
-			auto last_write = fs::last_write_time(file);
-			if (last_write != this->last_config_update) {
-				log(logging::warn, "Config file was changed...attempting to re-read it.");
-				readConfig();
-			}
-		}
-		else { // if file doesn't exist
-			log(logging::warn, "Config file not found...attempting to reset it.");
-			readConfig();
-		}
-	}
-	// every 24 hours or so reset logger...only comes into effect if this becomes a long running application
-	if (now - this->last_logging_updated > 24h) {
-		log(logging::info, "Refreshing logger");
-		this->last_logging_updated = now;
-		closeLogger();
-		openLogger();
-	}
-}
+
 void Monitor::updateTrackedDevices() {
 	/* Itterate over all recived messages.
 	 * If the message is a heartbeat update its last_communication so it doesn't get stale and
@@ -131,13 +104,17 @@ void Monitor::updateTrackedDevices() {
 	for ( const auto& message : messages ) {
 		auto tracked = std::find(tracked_devices.begin(), tracked_devices.end(), message.name);
 		if (tracked == tracked_devices.end()) {
-			switch ( message.type ) {
-		 		case typ::heartbeat: log(logging::warn, "Heartbeat recived from unknown device with name: '{}'", message.name);break;
-		 		case typ::alarm: log(logging::critical, "Alarm message recived from unknown device with name: '{}'!", message.name);break;
-		 		case typ::error:
-		 		default: log(logging::warn, "unknown message/error [{}] recived from unknown device with name '{}'", message.type, message.name);break;
+			checkDatabaseUpdate();
+		 	tracked = std::find(tracked_devices.begin(), tracked_devices.end(), message.name);
+			if (tracked == tracked_devices.end()) {
+				switch ( message.type ) {
+			 		case typ::heartbeat: log(logging::warn, "Heartbeat recived from unknown device with name: '{}'", message.name);break;
+			 		case typ::alarm: log(logging::critical, "Alarm message recived from unknown device with name: '{}'!", message.name);break;
+			 		case typ::error:
+			 		default: log(logging::warn, "unknown message/error [{}] recived from unknown device with name '{}'", message.type, message.name);break;
+			 	}
+		 		continue;
 		 	}
-		 	continue;
 		}
 		// tracked device found
 		switch ( message.type ) {

@@ -3,7 +3,13 @@
 
 static const char* database_name = "/var/lib/fireiot/stored_devices.db";
 
-std::vector<Device> loadDevices() {
+static std::filesystem::file_time_type getLastWriteTime(const char* filename){
+	namespace fs = std::filesystem;
+	auto file = fs::path(filename);
+	auto last_write = fs::last_write_time(file);
+}
+
+void Monitor::loadDevices() {
 	try {
 		SQLite::Database db(database_name, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE | SQLite::OPEN_FULLMUTEX, 200);
 		db.exec(R"(CREATE TABLE IF NOT EXISTS StoredDevices (
@@ -15,11 +21,11 @@ std::vector<Device> loadDevices() {
 		) )");
 
 		std::vector<Device> returned_devices;
-		SQLite::Statement query(db, "SELECT id,dev_name FROM StoredDevices");
+		SQLite::Statement query(db, "SELECT id,dev_name FROM StoredDevices ORDER BY id");
 		while (query.executeStep()){
-			int id = query.getColumn(0);
+			uint16_t id = query.getColumn(0);
 			std::string dev_name = query.getColumn(1);
-			returned_devices.emplace_back((uint16_t)id, dev_name);
+			returned_devices.emplace_back(id, dev_name);
 		}
 		if (returned_devices.size() == 0){
 			log(logging::warn, "Read database and found 0 devices...adding dummy null device");
@@ -30,16 +36,101 @@ std::vector<Device> loadDevices() {
 			std::error_code ec;
 			fs::permissions(database_name, fs::perms::owner_all | fs::perms::group_all, fs::perm_options::add, ec); // make sure database can be acessed by fire_iot group
 #endif
-		}
-
-		else
+		}else{
 			log(logging::info, "Read database and returned {} tracked devices.", returned_devices.size());
-		return returned_devices;
+		}
+		std::sort(returned_devices.begin(), returned_devices.end()); // should already be sorted but just in case.
+		tracked_devices = std::move(returned_devices);
 	}catch (std::exception& e)	{
 		log(logging::critical, "SQLite exception: {}\ncouldn't load Devices\n", e.what());
 	}
-	return {};
+	this->last_database_update = getLastWriteTime(config_file_name);
 }
+void Monitor::refreshDevicesInPlace(){
+	try {
+		SQLite::Database db(database_name, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE | SQLite::OPEN_FULLMUTEX, 200);
+		SQLite::Statement query(db, "SELECT id,dev_name FROM StoredDevices ORDER BY id");
+
+		std::vector<Device> new_devices;
+		auto tracked_itter = tracked_devices.begin();
+		while (query.executeStep()){
+			uint16_t querry_id = query.getColumn(0);
+			std::string dev_name = query.getColumn(1);
+			if (tracked_itter != tracked_devices.end()){
+				if (tracked_itter->id == querry_id){
+					tracked_itter->name = dev_name;
+				}else{
+					bool found = false;
+					auto searched = std::lower_bound(tracked_devices.begin(), tracked_devices.end(), querry_id);
+					if( searched != tracked_devices.end()){
+						if( searched->id == querry_id){
+							tracked_itter = searched;
+							tracked_itter->name = dev_name;
+							found = true;
+						}
+					}
+					if (!found){
+						new_devices.emplace_back(querry_id, dev_name);
+					}
+				}
+				tracked_itter++;
+			}
+		}
+		tracked_devices.insert(tracked_devices.end(), new_devices.begin(), new_devices.end());
+		std::sort(tracked_devices.begin(), tracked_devices.end());
+		log(logging::info, "reread database- now tracking {} devices.", tracked_devices.size());
+	}catch (std::exception& e)	{
+		log(logging::critical, "SQLite exception: {}\ncouldn't load Devices\n", e.what());
+	}
+	this->last_database_update = getLastWriteTime(config_file_name);
+}
+
+void Monitor::checkDatabaseUpdate(){
+	namespace fs = std::filesystem;
+	if (fs::exists(database_name)) {
+		auto file = fs::path(database_name);
+		auto last_write = fs::last_write_time(file);
+		if (last_write != this->last_database_update) {
+			log(logging::info, "{} has been added to- refreshing tracked devices.", database_name);
+			refreshDevicesInPlace();
+		}
+		fmt::print("last right time is the same");
+	}else{
+		log(logging::critical, "database not found...resetting application by reloading devices from scratch.");
+		loadDevices(); //load from scratch
+		log(logging::info, "the database file should really never be deleted. Check to see if something happend.");
+	}
+}
+void Monitor::periodicReset() {
+	// every minute or so check if files have changed.
+	using namespace std::chrono;
+	namespace fs = std::filesystem;
+	auto now = steady_clock::now();
+	if (now - this->last_files_updated > 2min) {
+		this->last_files_updated = now;
+		if (fs::exists(config_file_name)) {
+			auto file = fs::path(config_file_name);
+			auto last_write = fs::last_write_time(file);
+			if (last_write != this->last_config_update) {
+				log(logging::warn, "Config file was changed...attempting to re-read it.");
+				readConfig();
+			}
+		}
+		else { // if file doesn't exist
+			log(logging::warn, "Config file not found...attempting to reset it.");
+			readConfig();
+		}
+		checkDatabaseUpdate();
+	}
+	// every 24 hours or so reset logger...only comes into effect if this becomes a long running application
+	if (now - this->last_logging_updated > 24h) {
+		log(logging::info, "Refreshing logger");
+		this->last_logging_updated = now;
+		closeLogger();
+		openLogger();
+	}
+}
+
 
 std::string prepareAlert(uint16_t id, typ::Type alert_type) {
 	const char* alert_name = "General Error";
@@ -143,6 +234,5 @@ void Monitor::readConfig(int try_again) {
 		try_again++;
 	}
 	if(try_again == 1) readConfig(try_again);
-	auto file = std::filesystem::path(config_file_name);
-	last_config_update = std::filesystem::last_write_time(file);
+	last_config_update = getLastWriteTime(config_file_name);
 }
