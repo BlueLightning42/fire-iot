@@ -50,7 +50,6 @@ Monitor::Monitor(): MQTT_connected(false) {
 	openLogger(); // HAS to be opened before any logging can be done otherwise will crash on file write
 	readConfig(); // Store some configurable values. (can be changed by users)
 	tracked_devices = loadDevices(); // gets a sorted vector of all the id's of stored devices.
-	makeMessageThread();
 	auto now = std::chrono::steady_clock::now();
 	last_files_updated = now;
 	last_logging_updated = now;
@@ -140,7 +139,6 @@ void Monitor::updateTrackedDevices() {
 		 	}
 		 	continue;
 		}
-		fmt::print("Tracked {} {}, message from {}\n", tracked->name, tracked->id, message.name);
 		// tracked device found
 		switch ( message.type ) {
 		 case typ::heartbeat:{
@@ -169,7 +167,7 @@ void Monitor::updateTrackedDevices() {
 				// send repeated every timout
 				// dev->first_detection = now;
 				// send once unstil its been set to heartbeat and back.
-				tracked->first_detection = steady_clock::time_point::max() - milliseconds{ 1 };
+				tracked->first_detection = steady_clock::time_point::max() - 1ms ;
 			}
 			// make timout time equal to alarm time to make sure the ->alarm recived ->no communicaiton case happens much lower than the 3 minutes.
 			tracked->last_communication = now - timeout_alarm_blaring + timeout_no_communication;
@@ -208,14 +206,14 @@ void Monitor::checkForTimeouts() {
 			device.last_communication = max_time; //forces it to stop giving updates after one tick
 			device.first_detection = max_time;
 		}
-		if (device.first_detection != max_time) {
-			if ( (now - tracked->first_detection)*2 > timeout_alarm_blaring ) {
+		if (device.first_detection < max_time - 2ms ) {
+			if ( (now - device.first_detection)*2 > timeout_alarm_blaring ) {
 				auto fire_alert = prepareAlert(device.id, typ::alarm);
 				this->sendAlert(fire_alert);
 				// send repeated every timout
 				// dev->first_detection = now;
 				// send once unstil its ben set to heartbeat and back. (or timout)
-				tracked->first_detection = steady_clock::time_point::max() - milliseconds{ 1 };
+				device.first_detection = max_time - 1ms;
 			}
 		}
 	}

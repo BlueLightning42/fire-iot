@@ -36,12 +36,12 @@ class Monitor {
 	bool MQTT_connected;
 	void send_MQTT_message(const std::string& msg);
 	void initMQTT();
+	void makeMessageReciverThread();
+	void makeMessageSenderThread();
 	void closeMQTT();
 
 	// mainloop of the program
 	void mainLoop();
-
-	void makeMessageThread();
 
 	void pollMessages();
 	void periodicReset();

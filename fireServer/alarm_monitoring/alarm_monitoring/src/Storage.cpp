@@ -7,13 +7,13 @@ std::vector<Device> loadDevices() {
 	try {
 		SQLite::Database db(database_name, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE | SQLite::OPEN_FULLMUTEX, 200);
 		db.exec(R"(CREATE TABLE IF NOT EXISTS StoredDevices (
-			id int PRIMARY KEY,
+			id INTEGER PRIMARY KEY,
 			dev_name  VARCHAR(25) UNIQUE,
 			address  VARCHAR(25) NOT NULL,
 			postal_code VARCHAR(20),
 			device_type VARCHAR(20)
 		) )");
-		//db.exec(R"(INSERT INTO StoredDevices VALUES (0, "NOT_A_DEVICE",  "-1 null drive", "X0X123", "microwave") )");
+
 		std::vector<Device> returned_devices;
 		SQLite::Statement query(db, "SELECT id,dev_name FROM StoredDevices");
 		while (query.executeStep()){
@@ -24,6 +24,12 @@ std::vector<Device> loadDevices() {
 		if (returned_devices.size() == 0){
 			log(logging::warn, "Read database and found 0 devices...adding dummy null device");
 			db.exec(R"(INSERT INTO StoredDevices VALUES (0, "NOT_A_DEVICE",  "-1 null drive", "X0X123", "microwave") )");
+			returned_devices.emplace_back(0, "NOT_A_DEVICE");
+#ifdef __linux__
+			namespace fs = std::filesystem;
+			std::error_code ec;
+			fs::permissions(database_name, fs::perms::owner_all | fs::perms::group_all, fs::perm_options::add, ec); // make sure database can be acessed by fire_iot group
+#endif
 		}
 
 		else
@@ -58,7 +64,6 @@ std::string prepareAlert(uint16_t id, typ::Type alert_type) {
 			alert = fmt::format("Warning: '{}'\nRecived at: [{:%Y-%m-%d %H:%M:%S}]\nFrom {}, {}\n",
 								alert_name, fmt::localtime(now), query.getColumn(0), query.getColumn(1));
 		}
-		log(logging::info, "Read database and setup a alert");
 		return alert;
 	}
 	catch (std::exception& e) {
@@ -78,7 +83,7 @@ ClientName = OG_Monitor
 # please change these from defaults after setting up
 username = fire
 password = iot
-topic = alert/fire
+topic = fire/alert
 
 # ttn values for mqtt
 ttn_host = us-west.thethings.network:1883

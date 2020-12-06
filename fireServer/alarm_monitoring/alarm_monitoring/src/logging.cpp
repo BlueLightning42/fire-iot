@@ -33,7 +33,9 @@ void openLogger() {
 #else
 	logging::outFile = fopen(log_file_name.c_str(), "a");
 	std::error_code ec;
-	fs::permissions(log_file_name, fs::perms::all, fs::perm_options::add, ec); // make sure log file has all permissions...
+	fs::permissions(log_file_name, fs::perms::owner_read  | fs::perms::group_read, fs::perm_options::add, ec); // make sure log file can be read by anyone
+	fs::permissions(log_file_name, fs::perms::owner_write | fs::perms::group_write, fs::perm_options::add, ec); // make sure log file can be written by anyone
+	fs::permissions(log_file_name, fs::perms::owner_exec  | fs::perms::group_exec, fs::perm_options::remove, ec); // no one should be able to exec
 #endif
 	if (!logging::outFile ) {
 		// the only time this should ever fail is if another program has a lock on the log file or if the program doesn't have correct permissions.

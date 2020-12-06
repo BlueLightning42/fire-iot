@@ -39,13 +39,17 @@ after installing it head down to the *"running the program"* section
 You can read through each section of the install script and copy paste relevant parts- removing steps from here as more stuff keeps being added to the install script and its unmaintainable to make sure these match
 
 # Running the program
-Make sure you are in the correct directory (GatewayRPI/build)
-now all you have to do is run the program. - __I'm not sure yet if it can be run without root so for now__
-* `sudo alarm_monitoring/alarm_monitoring`
+Make sure you are in the correct directory (alarm_monitoring/build)
+now all you have to do is run the program.
+* `alarm_monitoring/alarm_monitoring`
 
 
 ## troubleshooting
 
 
 if you forgot to put --recurse-submodules then head into to top directory of the project and put
-`git submodule update --init --recursive`
+* `git submodule update --init --recursive`
+
+If you get an error inserting into the stored_devices database with either the form or the monitoring app make sure the filepermissions are set for the folder/file in `/var/lib/fireiot/stored_devices.db`
+*it should have already been set in the install script and running the program for the first time but make sure the database file and fireiot folder are both in the fire_iot group that both www-data and pi have been added to the fire_iot group and that both the folder and file have read/write permissions for the group settings.*
+as long as the permissions for the folder are setup with `umask 002` `chgrp fire_iot .` `chmod g+s .` in the `/var/lib/fireiot/` folder then the program should correctly set its own permissions when first creating the file. you can test by deleting the database and having it remake itself one.

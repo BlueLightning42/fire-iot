@@ -3,14 +3,17 @@
 
 // Example (heavily) edited from https://github.com/eclipse/paho.mqtt.cpp/blob/master/src/samples/async_publish_time.cpp
 
-// structure setup like this/split between functions so its not baked into the Monitor and can be painlessly removed...
-void Monitor::initMQTT(){
-	using namespace std::chrono;
+namespace {
+const int QOS_SEND = 1;
+const int QOS_RECIVE = 1;
+const int N_RETRY_ATTEMPTS = 5;
+}
 
+// structure setup like this/split between functions so its not baked into the Monitor and can be painlessly removed...
+void inline Monitor::makeMessageSenderThread(){
+	using namespace std::chrono;
 	// How many messages to buffer while off-line
 	const int MAX_BUFFERED_MESSAGES = 100;
-
-	// host_name = "broker.hivemq.com"; // testing server.
 
 	auto createOpts = mqtt::create_options_builder()
 						  .send_while_disconnected(true, true)
@@ -18,7 +21,6 @@ void Monitor::initMQTT(){
 						  .delete_oldest_messages()
 						  .finalize();
 
-	// switch to mqtt::async_client_ptr if this doesn't work
 	cli = std::make_shared<mqtt::async_client>(this->host_name, this->client_name, createOpts);
 
 	// Set callbacks for when connected and connection lost.
@@ -55,6 +57,37 @@ void Monitor::initMQTT(){
 	}
 }
 
+void inline Monitor::makeMessageReciverThread() {
+	using namespace std::chrono;
+	auto connOpts = mqtt::connect_options_builder()
+						.user_name(this->AppID)
+						.password(this->AppKey)
+						.automatic_reconnect(3s, 10s)
+						.connect_timeout(60s)
+						.finalize();
+
+	ttn_sub = std::make_shared<mqtt::async_client>(this->ttn_host, this->ttnClientName);
+	ttn_cbk = std::make_unique<ttn_connection_callback>(*ttn_sub, connOpts, this->recived, this->m);
+	ttn_sub->set_callback(*ttn_cbk);
+
+	// Start the connection.
+	// When completed, the callback will subscribe to topic.
+
+	try {
+		// Note that we start the connection, but don't wait for completion.
+		// We configured to allow publishing before a successful connection.
+		log(logging::info, "Attempting to connect to ttn");
+		ttn_sub->connect(connOpts, nullptr, *ttn_cbk);
+	}catch (const mqtt::exception& exc) {
+		log(logging::critical, "{}", exc.what());
+	}
+}
+
+void Monitor::initMQTT(){
+	makeMessageSenderThread();
+	makeMessageReciverThread();
+}
+
 void Monitor::closeMQTT(){
 	try{
 		log(logging::info, "Attempting to disconnect from mqtt broker @ {}", host_name);
@@ -62,29 +95,79 @@ void Monitor::closeMQTT(){
 	}catch (const mqtt::exception& exc) {
 		log(logging::critical, "{}", exc.what());
 	}
+
 	try {
 		log(logging::info, "Attempting to disconnect from ttn");
 		ttn_sub->disconnect()->wait();
-	}
-	catch (const mqtt::exception& exc) {
+	}catch (const mqtt::exception& exc) {
 		log(logging::critical, "{}", exc.what());
 	}
 }
 
-void Monitor::send_MQTT_message(const std::string& msg) {
-	if( MQTT_connected == false ){
-		// if not connected already try to connect again.
-		initMQTT();
+
+/* Callbacks for the success or failures of requested actions.
+ * This could be used to initiate further action, but here we just log the
+ * results to the console.
+ */
+void action_listener::on_failure(const mqtt::token& tok) {
+	log(logging::warn, "{} failure", name_);
+	if (tok.get_message_id() != 0){
+		log(logging::info, " ~>for token: [{}]", tok.get_message_id());
 	}
-	// The QoS for sending data
-	const int QOS = 1;
+}
 
+void action_listener::on_success(const mqtt::token& tok) {
+	log(logging::warn, "{} success", name_);
+	if (tok.get_message_id() != 0){
+		log(logging::info, " ~>for token: [{}]", tok.get_message_id());
+	}
+	auto top = tok.get_topics();
+	if (top && !top->empty()){
+		log(logging::info, " ~>token topic: '{}', ...", (*top)[0]);
+	}
+}
+
+/* This deomonstrates manually reconnecting to the broker by calling
+ * connect() again. This is a possibility for an application that keeps
+ * a copy of it's original connect_options, or if the app wants to
+ * reconnect with different options.
+ * Another way this can be done manually, if using the same options, is
+ * to just call the async_client::reconnect() method.
+ * for now leaving like this
+ */
+void ttn_connection_callback::reconnect() {
+	std::this_thread::sleep_for(std::chrono::milliseconds(2500));
 	try {
-		auto top = mqtt::topic(*cli, topic_name, QOS);
-
-		top.publish(msg);
+		cli_.connect(connOpts_, nullptr, *this);
 	}
 	catch (const mqtt::exception& exc) {
-		log(logging::critical, "{}", exc.what());
+		log(logging::critical,"Error: {}\n", exc.what() );
 	}
+}
+
+// Re-connection failure
+void ttn_connection_callback::on_failure(const mqtt::token& tok) {
+	if (++nretry_ > N_RETRY_ATTEMPTS){
+		log(logging::critical, "Connection attempt failed.");
+		return;
+	}
+	reconnect();
+}
+
+// Successfully connected
+void ttn_connection_callback::connected(const std::string& cause) {
+	log(logging::info, "Connection with ttn success- Subscribing to topic: {}", "fire/raw");
+
+	cli_.subscribe("+/devices/+/up", QOS_RECIVE, nullptr, subListener_);
+}
+
+// Callback for when the connection is lost.
+// This will initiate the attempt to manually reconnect.
+void ttn_connection_callback::connection_lost(const std::string& cause) {
+	log(logging::warn, "Connection to ttn lost");
+	if (!cause.empty()){
+		log(logging::info, "cause: {}", cause);
+	}
+	nretry_ = 0;
+	reconnect();
 }

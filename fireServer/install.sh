@@ -73,8 +73,10 @@ if [[ $setup_apache == 1 ]]; then
 	sudo adduser www-data fire_iot
 	sudo adduser pi fire_iot
 
-	sudo chown -vR :fire_iot /var/lib/fireiot # make sure php can acess the database folder along with default user
-	sudo chmod -vR g+w /var/lib/fireiot
+	umask 002
+	sudo chgrp fire_iot /var/lib/fireiot # make sure php can acess the database folder along with default user (pi)
+	sudo chmod -vR g+s /var/lib/fireiot
+
 fi
 
 

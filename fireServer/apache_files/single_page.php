@@ -11,16 +11,16 @@
 <body>
 <?php
 
-error_reporting(E_ALL);
-ini_set('display_errors', 'On');
-
+# error_reporting(E_ALL);
+# ini_set('display_errors', 'On');
+$valid = false;
 if( isset($_POST["inputCode"]) ){
   $db = new SQLite3("/var/lib/fireiot/stored_devices.db");
 
   $stm = $db->prepare('INSERT INTO StoredDevices(dev_name, address, postal_code, device_type) VALUES (?, ?, ?, "Smoke Alarm")');
   $stm->bindParam(1, $dev_name);
-  $stm->bindParam(1, $address);
-  $stm->bindParam(2, $postal_code);
+  $stm->bindParam(2, $address);
+  $stm->bindParam(3, $postal_code);
 
   $valid = true;
   if( isset($_POST["inputCode"]) ){
@@ -31,7 +31,6 @@ if( isset($_POST["inputCode"]) ){
   if( isset($_POST["inputCountry"], $_POST["inputProvice"], $_POST["inputCity"], $_POST["inputStreet"]) ){
     // validaiton code for address format should go here.
     $address = implode ( ", " , array($_POST["inputCountry"], $_POST["inputProvice"], $_POST["inputCity"], $_POST["inputStreet"]) );
-    echo "<h3>(Debugging) submitted address: " . $address . "</h3>";
   }else{
     echo "Not all fields are filled out";
     $valid = false;
@@ -42,11 +41,23 @@ if( isset($_POST["inputCode"]) ){
   }else{
     $valid = false;
   }
+  if( isset($_POST["inputCode"]) ){
+    //test valid zip code
+    $dev_name = $_POST["inputCode"];
+  }else{
+    $valid = false;
+  }
+
   if($valid){
     $stm->execute();
+    echo "<h3>submitted address: " . $address . "</h3>";
+    echo "<h2>for device: " . $dev_name . "</h2>";
+    echo "<p><i>You can now close this page (or register another device below)</i><p>";
+  }else{
+
   }
 }
- 
+
 
 ?>
     <form action="<?=$_SERVER['PHP_SELF']?>" method="post">
@@ -99,7 +110,7 @@ if( isset($_POST["inputCode"]) ){
                       required>
               <input  class="item"
                       type="submit" value="Submit">
-            </div> 
+            </div>
           </div>
         </fieldset>
     </form>
