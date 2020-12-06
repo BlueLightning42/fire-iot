@@ -7,6 +7,7 @@ static std::filesystem::file_time_type getLastWriteTime(const char* filename){
 	namespace fs = std::filesystem;
 	auto file = fs::path(filename);
 	auto last_write = fs::last_write_time(file);
+	return last_write;
 }
 
 void Monitor::loadDevices() {
@@ -44,7 +45,7 @@ void Monitor::loadDevices() {
 	}catch (std::exception& e)	{
 		log(logging::critical, "SQLite exception: {}\ncouldn't load Devices\n", e.what());
 	}
-	this->last_database_update = getLastWriteTime(config_file_name);
+	this->last_database_update = getLastWriteTime(database_name);
 }
 void Monitor::refreshDevicesInPlace(){
 	try {
@@ -54,26 +55,28 @@ void Monitor::refreshDevicesInPlace(){
 		std::vector<Device> new_devices;
 		auto tracked_itter = tracked_devices.begin();
 		while (query.executeStep()){
+			bool found = false;
 			uint16_t querry_id = query.getColumn(0);
 			std::string dev_name = query.getColumn(1);
 			if (tracked_itter != tracked_devices.end()){
 				if (tracked_itter->id == querry_id){
 					tracked_itter->name = dev_name;
-				}else{
-					bool found = false;
-					auto searched = std::lower_bound(tracked_devices.begin(), tracked_devices.end(), querry_id);
-					if( searched != tracked_devices.end()){
-						if( searched->id == querry_id){
-							tracked_itter = searched;
-							tracked_itter->name = dev_name;
-							found = true;
-						}
-					}
-					if (!found){
-						new_devices.emplace_back(querry_id, dev_name);
-					}
+					found = true;
 				}
 				tracked_itter++;
+			}
+			if(!found){
+				auto searched = std::lower_bound(tracked_devices.begin(), tracked_devices.end(), querry_id);
+				if( searched != tracked_devices.end()){
+					if( searched->id == querry_id){
+						tracked_itter = searched;
+						tracked_itter->name = dev_name;
+						found = true;
+					}
+				}
+			}
+			if (!found){
+				new_devices.emplace_back(querry_id, dev_name);
 			}
 		}
 		tracked_devices.insert(tracked_devices.end(), new_devices.begin(), new_devices.end());
@@ -82,7 +85,7 @@ void Monitor::refreshDevicesInPlace(){
 	}catch (std::exception& e)	{
 		log(logging::critical, "SQLite exception: {}\ncouldn't load Devices\n", e.what());
 	}
-	this->last_database_update = getLastWriteTime(config_file_name);
+	this->last_database_update = getLastWriteTime(database_name);
 }
 
 void Monitor::checkDatabaseUpdate(){
@@ -94,7 +97,6 @@ void Monitor::checkDatabaseUpdate(){
 			log(logging::info, "{} has been added to- refreshing tracked devices.", database_name);
 			refreshDevicesInPlace();
 		}
-		fmt::print("last right time is the same");
 	}else{
 		log(logging::critical, "database not found...resetting application by reloading devices from scratch.");
 		loadDevices(); //load from scratch
@@ -167,7 +169,7 @@ std::string prepareAlert(uint16_t id, typ::Type alert_type) {
 // moved to here to group all file related stuff in the same section.
 static const char* default_config_text = \
 R"(# Config file (can be changed)
-
+#format lines starting with '#' are ignored. config values stored in key=value lines. Please only change values don't edit the keys
 # alert message
 hostname = localhost:1883
 ClientName = OG_Monitor
@@ -184,8 +186,11 @@ AppID = XXX-XXX-XXX
 AppKey = ttn-account-v2.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 # Timeout values are in milliseconds
-timeout_no_communication = 180000
-timeout_alarm_blaring = 20000
+# Please note TTN/LORAWAN values https://avbentem.github.io/airtime-calculator/ttn/us915/1
+# And try not to set values that could be rate limited... timeout_no_communication can be much higher as heartbeats arn't as important.
+# however If its too high ["alarm" -> "no communication"] doesn't give as usefull a warning
+timeout_no_communication = 240000
+timeout_alarm_blaring = 30000
 )";
 
 // I've already added too many dependancies...adding hjson or ini or something just to make a config file that people won't touch often is too much
@@ -225,7 +230,7 @@ void Monitor::readConfig(int try_again) {
 		namespace fs = std::filesystem;
 		auto out = fmt::output_file(config_file_name);
 		std::error_code ec;
-		fs::permissions(config_file_name, fs::perms::all, fs::perm_options::add, ec); // make sure config file has all permissions... if rwxrwxrwx is bad...then change it to rwxrwx--- I guess
+		fs::permissions(config_file_name, fs::perms::group_all | fs::perms::owner_all, fs::perm_options::add, ec); // make sure config file has all permissions... if rwxrwxrwx is bad...then change it to rwxrwx--- I guess
 
 		out.print(default_config_text);
 		log(logging::info, "Replacing config with defaults");

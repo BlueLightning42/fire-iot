@@ -184,7 +184,7 @@ void Monitor::checkForTimeouts() {
 			device.first_detection = max_time;
 		}
 		if (device.first_detection < max_time - 2ms ) {
-			if ( (now - device.first_detection)*2 > timeout_alarm_blaring ) {
+			if ( (now - device.first_detection) > timeout_alarm_blaring*2 ) {
 				auto fire_alert = prepareAlert(device.id, typ::alarm);
 				this->sendAlert(fire_alert);
 				// send repeated every timout
