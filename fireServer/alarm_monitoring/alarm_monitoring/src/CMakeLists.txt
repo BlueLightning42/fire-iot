@@ -5,6 +5,7 @@ target_sources(MonitorLib
 	    MQTT_communication.cpp
 	    Packet_communication.cpp
 	    MonitorApp.cpp
+	    mainLogic.cpp
 	    Storage.cpp
 		logging.cpp
 )
