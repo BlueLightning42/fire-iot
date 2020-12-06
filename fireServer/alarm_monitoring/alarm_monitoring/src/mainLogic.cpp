@@ -2,25 +2,6 @@
 
 // main logic of the program
 
-void Monitor::mainLoop() {
-	/* Endless loop for continous program.
-	 * check for new messages.
-	 * if messages recived update all the devices.
-	 * then check for any timeouts
-	 * check if the config file or the database file have changed every 2min
-	 * repeat.
-	 */
-	while ( program::running ) {
-		pollMessages(); // in Packet_communication.cpp
-		if ( !messages.empty() ) {
-			updateTrackedDevices();
-		}
-		checkForTimeouts();
-		periodicReset(); // in Storage.cpp
-	}
-}
-
-
 void Monitor::updateTrackedDevices() {
 	/* Itterate over all recived messages.
 	 * If the message is a heartbeat update its last_communication so it doesn't get stale and
