@@ -55,6 +55,9 @@ void Monitor::updateTrackedDevices() {
 			}
 			if ( now - tracked->first_detection > timeout_alarm_blaring ) {
 				auto fire_alert = prepareAlert(tracked->id, message.type);
+				if( message.extra != ""){
+					fire_alert += message.extra;
+				}
 				this->sendAlert(fire_alert);
 				// send repeated every timout
 				// dev->first_detection = now;
@@ -68,6 +71,9 @@ void Monitor::updateTrackedDevices() {
 		 case typ::error: // all error types are sent with their error id...need to extend it for any error code added
 		 default:{
 			auto fire_alert = prepareAlert(tracked->id, message.type);
+			if( message.extra != ""){
+				fire_alert += message.extra;
+			}
 			this->sendAlert(fire_alert);
 			break;
 		 }

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang=”en”>
-<!--Single Page Application/Form for Gateway -->
+<!--Single Page Application/Form for entering devices -->
 
 <head>
     <meta charset="utf-8">
-    <title>Fire Gateway</title>
+    <title>Device Form</title>
     <link href="gateway.css" rel="stylesheet" type="text/css" />
 </head>
 

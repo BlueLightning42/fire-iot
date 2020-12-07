@@ -17,8 +17,9 @@ format of the full packet recived through Who knows at this point.
 struct Message {
 	typ::Type type;// : 4; //bits indicating the state of the communicating alarm.
 	std::string name;
-	Message(typ::Type t, std::string _name): type(t), name(_name) {}
-	Message(): type(typ::error), name("_") {}
+	std::string extra;
+	Message(typ::Type t, std::string _name, std::string _extra): type(t), name(_name), extra(_extra) {}
+	Message(): type(typ::error), name("_"), extra("") {}
 };
 
 class action_listener : public virtual mqtt::iaction_listener{

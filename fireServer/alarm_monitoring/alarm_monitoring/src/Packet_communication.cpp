@@ -52,8 +52,24 @@ void ttn_connection_callback::message_arrived(mqtt::const_message_ptr msg) {
 			payload = (typ::Type)payload_raw[0];
 		}
 	}
+	std::string extra = "";
+	nameit = doc.FindMember("metadata");
+	if(nameit != doc.MemberEnd()){
+		// I dont think most devices are sending the information so 99% of the time its empty
+		Value::MemberIterator latlong = nameit->value.FindMember("latitude");
+		if(latlong != nameit->value.MemberEnd()){
+			extra = fmt::format("latitude: {},", latlong->value.GetDouble());
+		}
+		latlong = nameit->value.FindMember("longitude");
+		if(latlong != nameit->value.MemberEnd()){
+			auto tmp = fmt::format("\n[{} | longitude: {}]",extra, latlong->value.GetDouble());
+			extra = tmp;
+			log(logging::info, "received coords {}", extra);
+		}
+	}
+
 	auto lock = std::unique_lock<std::mutex>(m_ref);
-	ref_recive_queue.emplace_back(payload, name);
+	ref_recive_queue.emplace_back(payload, name, extra);
 	lock.unlock();
 }
 
