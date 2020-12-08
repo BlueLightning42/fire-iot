@@ -29,6 +29,8 @@ void Monitor::loadDevices() {
 			returned_devices.emplace_back(id, dev_name);
 		}
 		if (returned_devices.size() == 0){
+			db.exec(R"(CREATE TABLE StoredUsers (user  VARCHAR(25) NOT NULL, password  VARCHAR(25) NOT NULL) )");
+			db.exec(R"(INSERT INTO  StoredUsers VALUES ("fire", "iot") )");
 			log(logging::warn, "Read database and found 0 devices...adding dummy null device");
 			db.exec(R"(INSERT INTO StoredDevices VALUES (0, "NOT_A_DEVICE",  "-1 null drive", "X0X123", "microwave") )");
 			returned_devices.emplace_back(0, "NOT_A_DEVICE");
@@ -137,10 +139,10 @@ void Monitor::periodicReset() {
 std::string prepareAlert(uint16_t id, typ::Type alert_type) {
 	const char* alert_name = "General Error";
 	switch (alert_type) {
-	 case typ::alarm: alert_name = "Alarm is On for too long"; break;
-	 case typ::no_communication: alert_name = "No communication recived for some time"; break;
-	 case typ::no_communication_and_fire: alert_name = "No communication recived for some time and last message sent was alarm!"; break;
-	 case typ::error: alert_name = "General Error recived"; break;
+	 case typ::alarm:                     alert_name = "Extended Alarm";                 break;
+	 case typ::no_communication:          alert_name = "Lost communication";             break;
+	 case typ::no_communication_and_fire: alert_name = "Lost communication after alarm"; break;
+	 case typ::error:                     alert_name = "General Error recived";          break;
 	 default: log(logging::critical, "Unknown alert_type: {} passed to prepareAlert function", alert_type);
 	}
 
@@ -154,7 +156,7 @@ std::string prepareAlert(uint16_t id, typ::Type alert_type) {
 		SQLite::Statement query(db, "SELECT address, postal_code FROM StoredDevices WHERE id = ?1");
 		query.bind(1, id);
 		while (query.executeStep()) {
-			alert = fmt::format("Warning: '{}'\nRecived at: [{:%Y-%m-%d %H:%M:%S}]\nFrom {}, {}\n",
+			alert = fmt::format("Warning: '{}'\nRecived at: [{:%Y-%m-%d %H:%M:%S}]\nFrom {}, [postal code {}]\n",
 								alert_name, fmt::localtime(now), query.getColumn(0), query.getColumn(1));
 		}
 		return alert;
@@ -189,8 +191,8 @@ AppKey = ttn-account-v2.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 # Please note TTN/LORAWAN values https://avbentem.github.io/airtime-calculator/ttn/us915/1
 # And try not to set values that could be rate limited... timeout_no_communication can be much higher as heartbeats arn't as important.
 # however If its too high ["alarm" -> "no communication"] doesn't give as usefull a warning
-timeout_no_communication = 240000
-timeout_alarm_blaring = 30000
+timeout_no_comm = 240000
+timeout_alarm = 30000
 )";
 
 // I've already added too many dependancies...adding hjson or ini or something just to make a config file that people won't touch often is too much
@@ -210,17 +212,17 @@ void Monitor::readConfig(int try_again) {
 			auto value = line.substr(delimiterPos + 1);
 
 			// could be prettyfied with Pattern Matching if that decides to work its way into c++23 but w/e...if I cared more I'd swap to a dedicated library.
-			if      ( name == "hostname" )                   host_name = value;
-			else if ( name == "ClientName" )                 client_name = value;
-			else if ( name == "username" )                   username = value;
-			else if ( name == "password" )                   password = value;
-			else if ( name == "topic" )                      topic_name = value;
-			else if ( name == "timeout_no_communication" )   timeout_no_communication = std::chrono::milliseconds(std::stoi(value));
-			else if ( name == "timeout_alarm_blaring" )      timeout_alarm_blaring = std::chrono::milliseconds(std::stoi(value));
-			else if ( name == "ttn_host" )                   ttn_host = value;
-			else if ( name == "ttnClientName" )              ttnClientName = value;
-			else if ( name == "AppID" )                      AppID = value;
-			else if ( name == "AppKey" )                     AppKey = value;
+			if      ( name == "hostname" )         host_name = value;
+			else if ( name == "ClientName" )       client_name = value;
+			else if ( name == "username" )         username = value;
+			else if ( name == "password" )         password = value;
+			else if ( name == "topic" )            topic_name = value;
+			else if ( name == "timeout_no_comm" )  timeout_no_communication = std::chrono::milliseconds(std::stoi(value));
+			else if ( name == "timeout_alarm" )    timeout_alarm_blaring = std::chrono::milliseconds(std::stoi(value));
+			else if ( name == "ttn_host" )         ttn_host = value;
+			else if ( name == "ttnClientName" )    ttnClientName = value;
+			else if ( name == "AppID" )            AppID = value;
+			else if ( name == "AppKey" )           AppKey = value;
 
 		}
 		try_again+=10;
@@ -240,4 +242,5 @@ void Monitor::readConfig(int try_again) {
 	}
 	if(try_again == 1) readConfig(try_again);
 	last_config_update = getLastWriteTime(config_file_name);
+
 }

@@ -1,0 +1,74 @@
+body {
+    font-family: verdana;
+    font-size: 10pt;
+}
+.ROM {
+    pointer-events: none;
+    background-color: WhiteSmoke;
+}
+form{
+	width: 100%;
+}
+fieldset {
+    border: 1px solid steelblue
+}
+
+legend {
+    border: 1px solid steelblue;
+    font-size: 12pt;
+    font-weight: bold;
+    padding: 3px;
+    color: steelblue
+}
+
+label {
+    width: 120px;
+    text-align: right;
+    font-weight: bold;
+    display: inline-block;
+    margin: 2px;
+}
+
+input {
+    color: steelblue;
+    font-weight: bold;
+    display: inline-block;
+    margin: 2px
+}
+
+h4 {
+    background-color: steelblue;
+    padding: 5px;
+    text-align: center;
+    letter-spacing: .2em;
+    font-variant: small-caps;
+    margin: 0px
+}
+
+table.members {
+    width: 100%;
+    border: 2px solid steelblue;
+    border-collapse: collapse
+}
+
+table.members td {
+    border: 1px dotted black;
+    background-color: #FFF;
+    padding: 3px;
+}
+
+table.members th {
+    border: 1px dotted black;
+    text-align: center;
+    background-color: #DDD;
+    padding: 3px
+}
+
+a {
+    font-weight: bold;
+    color: navy
+}
+
+a:visited {
+    color: navy;
+}
